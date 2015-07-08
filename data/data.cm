@@ -1,0 +1,13 @@
+Library (0.0.1) 
+	signature ATHENA_DATA
+	structure AthenaData
+is
+	$/basis.cm
+      	$/smlnj-lib.cm
+      	../core/core.cm
+     	sequence.sig
+      	sequence.sml
+      	event.sig
+      	event.sml
+      	extern.sig
+      	extern.sml

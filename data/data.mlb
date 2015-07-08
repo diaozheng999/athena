@@ -1,0 +1,14 @@
+local
+	$(SML_LIB)/basis/basis.mlb
+	$(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+	../core/core.mlb
+	sequence.sig
+	sequence.sml
+	event.sig
+	event.sml
+	extern.sig
+	extern.sml
+in
+	signature ATHENA_DATA
+	structure AthenaData
+end

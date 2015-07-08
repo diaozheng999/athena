@@ -1,0 +1,6 @@
+# emacs temporary files
+*#
+*~
+
+# SML/NJ CM files
+**/.cm/

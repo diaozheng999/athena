@@ -1,0 +1,21 @@
+local
+	$(SML_LIB)/basis/basis.mlb
+	$(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+	env.sig
+	env.sml
+	core.sig
+	core.sml
+	stack.sig
+	stack.sml
+	thread.sig
+	thread.sml
+	serialiser.sig
+	serialiser.sml
+	extern.sig
+	extern.sml
+in
+	signature ATHENA_CORE_TOPLEVEL
+	signature ATHENA_CORE
+	signature ATHENA_CORE_SERIALISABLE
+	structure AthenaCore
+end
