@@ -1,17 +1,38 @@
-structure Utf8String :> STRING =
+structure Utf8String =
 struct
 
-open Core
+type char = Word.word
+type string = char vector
+
+val maxSize =
+    case Int.maxInt of
+      SOME i => i
+    | NONE => Word.toInt (0wx7FFFFFFF)
 
 
-eqtype string = int * Word8Vector.vector
-eqtype char = int * Word8Vector.vector
+val size = Vector.length
+val sub = Vector.sub
+fun extract s = (VectorSlice.vector o VectorSlice.slice) s
+fun substring (s,i,j) = extract(s,i,SOME j)
+val concat = Vector.concat
+fun i ^ j = concat [i,j]
 
-val maxSize = min(Int.maxInt, CharVector.maxLen)
+fun concatWith (s, []) = Vector.fromList []
+  | concatWith (s, [x]) = x
+  | concatWith (s, x::y::xs) = concatWith (s, concat [x,s,y]::xs)
 
-fun size (len, _) = len
+fun str c = Vector.fromList [c]
 
-fun sub
+val implode = Vector.fromList
+
+fun explode s = Vector.foldr (op::) [] s
+
+val map = Vector.map
+
+fun translate f s = concat (List.map f (explode s))
+
+fun fields f s =
+
 
 
 end
