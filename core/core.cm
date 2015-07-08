@@ -10,6 +10,7 @@ is
 	$c/c.cm
 	env.sig
 	env.sml
+	env_smlnj.sml
 	core.sig
 	core.sml
 	stack.sig

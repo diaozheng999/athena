@@ -3,6 +3,7 @@ local
 	$(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
 	env.sig
 	env.sml
+	env_mlton.sml
 	core.sig
 	core.sml
 	stack.sig
