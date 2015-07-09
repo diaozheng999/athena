@@ -4,6 +4,10 @@ local
 	env.sig
 	env.sml
 	env_mlton.sml
+	string.sig
+	utf8common.sml
+	utf8char.sml
+	utf8string.sml
 	core.sig
 	core.sml
 	stack.sig

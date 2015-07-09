@@ -31,5 +31,16 @@ fun fst (f, b) a = f (a, b)
 
 fun snd (f, a) b = f (a, b)
 
+val u = Option.valOf o Utf8String.fromString
+val % = Option.valOf o Utf8Char.fromString
+val ^^ = Utf8String.^
+val u_chr = Utf8Char.chr
+val u_concat = Utf8String.concat
+val u_explode = Utf8String.explode
+val u_implode = Utf8String.implode
+val u_ord = Utf8Char.ord
+val u_size = Utf8String.size
+val u_str = Utf8String.str
+val u_substring = Utf8String.substring
 
 end

@@ -3,7 +3,6 @@ Library (0.0.1)
 	signature ATHENA_CORE
 	signature ATHENA_CORE_SERIALISABLE
 	structure AthenaCore
-	structure C
 is
 	$/basis.cm
 	$/smlnj-lib.cm
@@ -11,6 +10,10 @@ is
 	env.sig
 	env.sml
 	env_smlnj.sml
+	string.sig
+	utf8common.sml
+	utf8char.sml
+	utf8string.sml
 	core.sig
 	core.sml
 	stack.sig

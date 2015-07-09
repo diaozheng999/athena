@@ -13,5 +13,9 @@ sig
     structure Task : TASK
     structure TopLevel : CORE
     structure Serialiser : SERIALISER
+    structure Char : ATHENA_CHAR
+    structure String : ATHENA_STRING
+    structure Utf8Char : ATHENA_CHAR
+    structure Utf8String : ATHENA_STRING
 
 end
