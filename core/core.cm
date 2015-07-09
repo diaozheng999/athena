@@ -1,26 +1,29 @@
 Library (0.0.1)
-	signature ATHENA_CORE_TOPLEVEL
-	signature ATHENA_CORE
-	signature ATHENA_CORE_SERIALISABLE
-	structure AthenaCore
+        signature ATHENA_CORE_TOPLEVEL
+        signature ATHENA_CORE
+        signature ATHENA_CORE_SERIALISABLE
+        structure AthenaCore
+        structure RegExp
 is
-	$/basis.cm
-	$/smlnj-lib.cm
-	$c/c.cm
-	env.sig
-	env.sml
-	env_smlnj.sml
-	string.sig
-	utf8common.sml
-	utf8char.sml
-	utf8string.sml
-	core.sig
-	core.sml
-	stack.sig
-	stack.sml
-	thread.sig
-	thread.sml
-	serialiser.sig
-	serialiser.sml
-	extern.sig
-	extern.sml
+        $/basis.cm
+        $/smlnj-lib.cm
+        $c/c.cm
+        env.sig
+        env.sml
+        env_smlnj.sml
+        string.sig
+        utf8common.sml
+        utf8char.sml
+        utf8string.sml
+        regexp.sig
+        regexp.sml
+        core.sig
+        core.sml
+        stack.sig
+        stack.sml
+        thread.sig
+        thread.sml
+        serialiser.sig
+        serialiser.sml
+        extern.sig
+        extern.sml

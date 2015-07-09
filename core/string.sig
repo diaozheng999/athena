@@ -29,7 +29,7 @@ sig
     val <= : string * string -> bool
     val >  : string * string -> bool
     val >= : string * string -> bool
-				    
+
     val toString : string -> String.string
     val fromString : String.string -> string option
     val toCString : string -> String.string
@@ -47,21 +47,21 @@ sig
     val minChar : char
     val maxChar : char
     val maxOrd : int
-		     
+
     val ord : char -> int
     val chr : int -> char
     val succ : char -> char
     val pred : char -> char
-			   
+
     val compare : char * char -> order
     val <  : char * char -> bool
     val <= : char * char -> bool
     val >  : char * char -> bool
     val >= : char * char -> bool
-				
+
     val contains : string -> char -> bool
     val notContains : string -> char -> bool
-					    
+
     val isAscii : char -> bool
     val toLower : char -> char
     val toUpper : char -> char
@@ -76,11 +76,10 @@ sig
     val isSpace : char -> bool
     val isPunct : char -> bool
     val isUpper : char -> bool
-			      
+
     val toString : char -> String.string
     val scan : (Char.char, 'a) StringCvt.reader -> (char, 'a) StringCvt.reader
     val fromString : String.string -> char option
     val toCString : char -> String.string
     val fromCString : String.string -> char option
 end
-
