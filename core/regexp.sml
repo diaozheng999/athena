@@ -9,6 +9,31 @@ datatype 'a regexp = Zero
                    | And of 'a regexp * 'a regexp
                    | Star of 'a regexp
 
+datatype 'a tok = TDot
+                | TBracketOpen
+                | TBracketClose
+                | TBracketNegOpen
+                | TStart
+                | TEnd
+                | TSubexprOpen
+                | TSubexprClose
+                | TStar
+                | TRepOpen
+                | TRepClose
+                | TQnMark
+                | TPlus
+                | TPipe
+                | TDigit
+                | TWord
+                | TNonWord
+                | TWordBoundary
+                | TNonDigit
+                | TWhitespace
+                | TNonWhitespace
+
+datatype ctx = CtxPattern | CtxBracketExpr
+
+
 exception Match
 
 
@@ -66,5 +91,16 @@ fun matchs r s k = match (op=) r substrReader (CharVectorSlice.full s)
                    (k o CharVectorSlice.vector)
 
 fun matchus r (s:Utf8String.string) = matchv r s
+
+fun lex ctx getc strm=
+    case getc strm of
+      NONE => NONE
+    | SOME (#"^", rest) =>
+      (case ctx of
+         CtxPattern => Option.map (fn tl => TStart::tl) (lex ctx getc rest)
+       | _ => Option.map (fn tl => TChar #"^"::tl) (lex ctx getc rest))
+    | SOME (#"$", rest) =>
+      (case ctx of
+         CtxPattern =>
 
 end
