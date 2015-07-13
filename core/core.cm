@@ -4,6 +4,8 @@ Library (0.0.1)
         signature ATHENA_CORE_SERIALISABLE
         structure AthenaCore
         structure RegExp
+        structure Tree
+        functor BST
 is
         $/basis.cm
         $/smlnj-lib.cm
@@ -17,6 +19,10 @@ is
         utf8string.sml
         regexp.sig
         regexp.sml
+        tree.sig
+        tree.sml
+        bst.sig
+        bst.sml
         core.sig
         core.sml
         stack.sig

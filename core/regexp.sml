@@ -1,6 +1,7 @@
-structure RegExp : REGEXP =
+structure RegExp    =
 struct
 
+open Tree
 
 datatype 'a regexp = Zero
                    | All
@@ -8,6 +9,12 @@ datatype 'a regexp = Zero
                    | Or of 'a regexp * 'a regexp
                    | And of 'a regexp * 'a regexp
                    | Star of 'a regexp
+
+                   (* the following definitions could be further simplified
+                      but will is present for ease of computation *)
+                   | Range of 'a * 'a
+                   | Member of 'a tree
+                   | Predicate of 'a -> bool
 
 datatype 'a tok = TDot
                 | TBracketOpen
@@ -30,6 +37,9 @@ datatype 'a tok = TDot
                 | TNonDigit
                 | TWhitespace
                 | TNonWhitespace
+                | TSpan
+                | TChar of 'a
+
 
 datatype ctx = CtxPattern | CtxBracketExpr
 
@@ -92,15 +102,29 @@ fun matchs r s k = match (op=) r substrReader (CharVectorSlice.full s)
 
 fun matchus r (s:Utf8String.string) = matchv r s
 
-fun lex ctx getc strm=
-    case getc strm of
-      NONE => NONE
-    | SOME (#"^", rest) =>
-      (case ctx of
-         CtxPattern => Option.map (fn tl => TStart::tl) (lex ctx getc rest)
-       | _ => Option.map (fn tl => TChar #"^"::tl) (lex ctx getc rest))
-    | SOME (#"$", rest) =>
-      (case ctx of
-         CtxPattern =>
-
+open Utf8Helper
+(*
+fun lex ctx getc strm =
+    let fun interpret {pat=ptok, bra=btok} strm' =
+            Option.map
+                (fn tl => case ctx of
+                              CtxPattern => ptok::tl
+                            | _ => btok::tl)
+                (lex ctx getc strm')
+    in
+      case getc strm of
+          NONE => SOME []
+        | SOME (#"^", rest) => interpret {pat=TStart, bra=(TChar #"^")} rest
+        | SOME (#"$", rest) => interpret {pat=TEnd,   bra=(TChar #"$")} rest
+        | SOME (#".", rest) => interpret {pat=TDot,   bra=(TChar #".")} rest
+        | SOME (#"*", rest) => interpret {pat=TStar,  bra=(TChar #"*")} rest
+        | SOME (#"?", rest) => interpret {pat=TQnMark,bra=(TChar #"?")} rest
+        | SOME (#"+", rest) => interpret {pat=TPlus,  bra=(TChar #"+")} rest
+        | SOME (#"]", rest) =>
+          (case ctx of
+               CtxBracketExpr => Option.map (fn tl => T
+        | SOME (c, rest) => Option.map (fn tl => TChar c::tl)
+                                       (lex ctx getc rest)
+    end
+*)
 end

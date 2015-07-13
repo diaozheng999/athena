@@ -1,15 +1,15 @@
 functor EnvWrapper (T : sig
-			val compiler : string
-		    end) : ENV =
+                      val compiler : string
+                    end) : ENV =
 struct
 
 datatype debug_t = DEBUG | RELEASE
 datatype compiler_t = SMLNJ | MLTON | POLY | UNKNOWN
 
 val debug = DEBUG
-val compiler = 
+val compiler =
     case T.compiler of
-	"smlnj" => SMLNJ
+        "smlnj" => SMLNJ
       | "mlton" => MLTON
       | "poly" => POLY
       | _ => UNKNOWN

@@ -1,26 +1,35 @@
 local
-	$(SML_LIB)/basis/basis.mlb
-	$(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
-	env.sig
-	env.sml
-	env_mlton.sml
-	string.sig
-	utf8common.sml
-	utf8char.sml
-	utf8string.sml
-	core.sig
-	core.sml
-	stack.sig
-	stack.sml
-	thread.sig
-	thread.sml
-	serialiser.sig
-	serialiser.sml
-	extern.sig
-	extern.sml
+        $(SML_LIB)/basis/basis.mlb
+        $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+        env.sig
+        env.sml
+        env_mlton.sml
+        string.sig
+        utf8common.sml
+        utf8char.sml
+        utf8string.sml
+        regexp.sig
+        regexp.sml
+        tree.sig
+        tree.sml
+        bst.sig
+        bst.sml
+        core.sig
+        core.sml
+        stack.sig
+        stack.sml
+        thread.sig
+        thread.sml
+        serialiser.sig
+        serialiser.sml
+        extern.sig
+        extern.sml
 in
-	signature ATHENA_CORE_TOPLEVEL
-	signature ATHENA_CORE
-	signature ATHENA_CORE_SERIALISABLE
-	structure AthenaCore
+        signature ATHENA_CORE_TOPLEVEL
+        signature ATHENA_CORE
+        signature ATHENA_CORE_SERIALISABLE
+        structure AthenaCore
+        structure RegExp
+        structure Tree
+        functor BST
 end
