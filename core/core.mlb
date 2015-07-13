@@ -8,20 +8,21 @@ local
         utf8common.sml
         utf8char.sml
         utf8string.sml
-        regexp.sig
-        regexp.sml
+        core.sig
+        core.sml
         tree.sig
         tree.sml
         bst.sig
         bst.sml
-        core.sig
-        core.sml
+        rbt.sml
         stack.sig
         stack.sml
         thread.sig
         thread.sml
         serialiser.sig
         serialiser.sml
+        regexp.sig
+        regexp.sml
         extern.sig
         extern.sml
 in
@@ -32,4 +33,5 @@ in
         structure RegExp
         structure Tree
         functor BST
+        functor RedBlackTree
 end
