@@ -11,6 +11,8 @@ is
         env.sig
         env.sml
         env_smlnj.sml
+        contracts.sig
+        contracts.sml
         string.sig
         utf8common.sml
         utf8char.sml

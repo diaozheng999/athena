@@ -3,10 +3,10 @@ functor EnvWrapper (T : sig
                     end) : ENV =
 struct
 
-datatype debug_t = DEBUG | RELEASE
+datatype debug_t = DEBUG | RELEASE | CONTRACT
 datatype compiler_t = SMLNJ | MLTON | POLY | UNKNOWN
 
-val debug = DEBUG
+val debug = CONTRACT
 val compiler =
     case T.compiler of
         "smlnj" => SMLNJ
