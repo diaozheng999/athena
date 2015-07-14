@@ -20,6 +20,7 @@ is
         utf8string.sml
         core.sig
         core.sml
+        base_cmp.sml
         tree.sig
         tree.sml
         bst.sig

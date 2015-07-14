@@ -5,6 +5,8 @@ datatype 'a tree = Empty | Node of 'a tree * 'a * 'a tree
 datatype traversal = InOrder | PreOrder | PostOrder
 datatype branch = TLeft | TRight
 
+exception Sub
+
 val empty : unit -> 'a tree
 
 val isEmpty : 'a tree -> bool
@@ -34,5 +36,7 @@ val isLeaf : 'a tree -> bool
 val exists : ('a -> bool) -> 'a tree -> bool
 
 val all : ('a -> bool) -> 'a tree -> bool
+
+val root : 'a tree -> 'a
 
 end

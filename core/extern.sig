@@ -2,7 +2,7 @@ signature ATHENA_CORE_TOPLEVEL = CORE
 
 signature ATHENA_CORE_SERIALISABLE = SERIALISABLE
 
-signature ATHENA_CORE = 
+signature ATHENA_CORE =
 sig
 
     include CORE
@@ -17,5 +17,12 @@ sig
     structure String : ATHENA_STRING
     structure Utf8Char : ATHENA_CHAR
     structure Utf8String : ATHENA_STRING
+    structure Cmp : sig
+                structure Int : ORD_KEY
+                structure Char : ORD_KEY
+                structure String : ORD_KEY
+                structure Utf8Char : ORD_KEY
+                structure Utf8String : ORD_KEY
+              end
 
 end

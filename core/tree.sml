@@ -99,4 +99,6 @@ fun exists p Empty = false
 fun all p Empty = true
   | all p (Node (l,x,r)) = p x andalso all p l andalso all p r
 
+
+fun root t = sub (t, [])
 end
