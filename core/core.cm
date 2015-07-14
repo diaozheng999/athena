@@ -3,10 +3,7 @@ Library (0.0.1)
         signature ATHENA_CORE
         signature ATHENA_CORE_SERIALISABLE
         structure AthenaCore
-        structure RegExp
         structure Tree
-        functor BST
-        functor RedBlackTree
 is
         $/basis.cm
         $/smlnj-lib.cm
@@ -20,6 +17,8 @@ is
         utf8string.sml
         core.sig
         core.sml
+        enum_key.sig
+        enum_key.sml
         base_cmp.sml
         tree.sig
         tree.sml
@@ -32,7 +31,5 @@ is
         thread.sml
         serialiser.sig
         serialiser.sml
-        regexp.sig
-        regexp.sml
         extern.sig
         extern.sml

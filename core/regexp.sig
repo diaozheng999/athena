@@ -1,15 +1,40 @@
 signature REGEXP =
 sig
 
-  datatype 'a regexp = Zero
-                     | All
-                     | Char of 'a
-                     | Or of 'a regexp * 'a regexp
-                     | And of 'a regexp * 'a regexp
-                     | Star of 'a regexp
+  structure T : ORD_KEY
+  structure Search : BST
+
+  type t = T.ord_key
+
+  datatype regexp = Zero
+                  | All
+                  | Char of t
+                  | Or of regexp * regexp
+                  | And of regexp * regexp
+                  | Star of regexp
+                  | NotChar of t
+
+  (* non-pure datastructures for computation *)
+                  | Range of t * t
+                  | Elem of Search.bst
+                  | Fn of t -> bool
+                  | Not of regexp
 
   exception Match
+  exception Unserialisable
+  exception Impure
 
+  val isSerialisable : regexp -> bool
+
+  val isPure : regexp -> bool
+
+  val purify : regexp -> regexp
+
+  val match : regexp -> (t, 'a) StringCvt.reader -> (bool, 'a) StringCvt.reader
+
+
+
+(*
   val match : ('a * 'a -> bool)
               -> 'a regexp
               -> ('a, 'b) StringCvt.reader
@@ -22,7 +47,7 @@ sig
   val matchus : Utf8Char.char regexp ->
                 Utf8String.string ->
                 (Utf8String.string -> bool) -> bool
-
+*)
 
 (*
   val match : 'a regexp -> 'a list -> bool
