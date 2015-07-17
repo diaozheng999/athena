@@ -70,6 +70,8 @@ fun fromBytes en w =
          | BIG => VS.foldl shift 0wx0 w
     end
 
+fun bytesToInt32 en = toInt32 o (fromBytes en)
+
 fun normalise r =
     let val exp = Real.floor (Math.ln (Real.abs r)/Math.ln 2.0)
     in (Real.signBit r, exp, (Real.abs r) / Math.pow(2.0, Real.fromInt exp)-1.0)
@@ -285,31 +287,28 @@ end
 
 fun minLength s len = VS.length s >= len
 
+fun ensure s (l,t) k =
+    case minLength s l andalso isType s t of
+      true => k ()
+    | false => raise Type
+
 fun unpackUnit s =
-    case minLength s 1 andalso isType s 0wx0 of
-        true => ((), VS.subslice (s,1,NONE))
-      | false => raise Type
+    ensure s (1, 0w0) (fn () =>((), VS.subslice (s,1,NONE)))
 
 fun unpackBool s =
-    case minLength s 2 andalso isType s 0wx1 of
-        false => raise Type
-      | true => (case VS.sub(s,1) of
-                     0w0 => false
-                   | 0w1 => true
-                   | _ => raise Type,
-                 VS.subslice(s,2,NONE))
+    ensure s (2,0w1) (fn () => (case VS.sub(s,1) of
+                                  0w0 => false
+                                | 0w1 => true
+                                | _ => raise Type,
+                                VS.subslice(s,2,NONE)))
 
 fun unpackChar s =
-    case minLength s 2 andalso isType s 0wx2 of
-        false => raise Type
-      | true => (Byte.byteToChar (VS.sub(s,1)),
-                 VS.subslice(s,2,NONE))
+    ensure s (2, 0w2) (fn () => (Byte.byteToChar (VS.sub(s,1)),
+                                 VS.subslice(s,2,NONE)))
 
 fun unpackInt s =
-    case minLength s 5 andalso isType s 0wx3 of
-        true => (toInt32 (fromBytes LITTLE (VS.subslice(s,1,SOME 4))),
-                 VS.subslice(s,5,NONE))
-      | false => raise Type
+    ensure s (5, 0w3) (fn () => (bytesToInt32 LITTLE (VS.subslice(s,1,SOME 4)),
+                                 VS.subslice(s,5,NONE)))
 
 fun unpackFloat (exp, mts) s =
     let val bits = toBitVector s
@@ -335,91 +334,78 @@ fun unpackFloat (exp, mts) s =
     end
 
 fun unpackReal s =
-    case minLength s 5 andalso isType s 0wx4 of
-        true => (unpackFloat (8, 23) (VS.subslice(s,1,SOME 4)),
-                 VS.subslice(s,5,NONE))
-      | false => raise Type
+    ensure s (5,0w4) (fn () => (unpackFloat (8, 23) (VS.subslice(s,1,SOME 4)),
+                                 VS.subslice(s,5,NONE)))
 
 fun unpackReal64 s =
-    case minLength s 9 andalso isType s 0wx10 of
-        true => (unpackFloat (11, 52) (VS.subslice(s,1,SOME 8)),
-                 VS.subslice(s,9,NONE))
-      | false => raise Type
+    ensure s (9,0wx10)
+            (fn () => (unpackFloat (11, 52) (VS.subslice(s,1,SOME 8)),
+                       VS.subslice(s,9,NONE)))
 
 fun unpackUnsafeString s =
     case minLength s 4 of
         true =>
-        let val len = toInt32 (fromBytes LITTLE (VS.subslice(s,0,SOME 4)))
+        let val len = bytesToInt32 LITTLE (VS.subslice(s,0,SOME 4))
         in (Byte.unpackStringVec(VS.subslice(s,4,SOME len)),
             VS.subslice(s,4+len,NONE)) end
       | false => raise Type
 
 fun unpackString s =
-    case minLength s 1 andalso isType s 0wx5 of
-        true => unpackUnsafeString (VS.subslice(s,1,NONE))
-      | false => raise Type
+    ensure s (1,0w5) (fn () => unpackUnsafeString (VS.subslice(s,1,NONE)))
 
 fun unpackLargeInt s =
-    case minLength s 5 andalso isType s 0wx6 of
-        true => let val len = toInt32 (fromBytes LITTLE
-                                                 (VS.subslice(s,1,SOME 4)))
-                    fun build len = VS.foldl (fn (b,x) =>
-                                                 IntInf.+(IntInf.*(x,256),
-                                                          W8.toLargeInt b))
-                                             0
-                                             (VS.subslice(s,5,SOME len))
+    ensure s (5,0w6)
+            (fn () => let
+                  val len = bytesToInt32 LITTLE (VS.subslice(s,1,SOME 4))
+                  fun build len = VS.foldl (fn (b,x) =>
+                                               IntInf.+(IntInf.*(x,256),
+                                                        W8.toLargeInt b))
+                                           0
+                                           (VS.subslice(s,5,SOME len))
                 in case len<0 of
-                       true => (~(build (~len)),
-                                VS.subslice(s,5-len,NONE))
-                     | false =>(build len, VS.subslice(s, 5+len, NONE))
-                end
-      | false => raise Type
+                     true => (~(build (~len)),
+                              VS.subslice(s,5-len,NONE))
+                   | false =>(build len, VS.subslice(s, 5+len, NONE))
+                end)
 
 fun unpackOrder s =
-    case minLength s 2 andalso isType s 0wxA of
-        false => raise Type
-      | true => case VS.sub(s,1) of
-                    0wxFF => (LESS, VS.subslice(s,2,NONE))
-                  | 0wx00 => (EQUAL, VS.subslice(s,2,NONE))
-                  | 0wx01 => (GREATER, VS.subslice(s,2,NONE))
-                  | _ => raise Type
+    ensure s (2,0wxa)
+            (fn () => case VS.sub(s,1) of
+                        0wxFF => (LESS, VS.subslice(s,2,NONE))
+                      | 0wx00 => (EQUAL, VS.subslice(s,2,NONE))
+                      | 0wx01 => (GREATER, VS.subslice(s,2,NONE))
+                      | _ => raise Type)
 
 
 fun unpackWord s =
-    case minLength s 5 andalso isType s 0wxC of
-        true => (fromBytes LITTLE (VS.subslice(s,1,SOME 4)),
-                 VS.subslice(s,5,NONE))
-      | false => raise Type
+    ensure s (2,0wxc) (fn () => (fromBytes LITTLE (VS.subslice(s,1,SOME 4)),
+                                  VS.subslice(s,5,NONE)))
 
 
 fun unpackUChar s =
-    case minLength s 4 andalso isType s 0wxD of
-        false => raise Type
-      | true => (Utf8Char.chr
-                     (toInt32
-                          (fromBytes LITTLE
-                                     (concat (VS.subslice(s,1,SOME 3),
-                                              singleton 0w0)))),
-                 VS.subslice(s,4,NONE))
+    ensure s (4, 0wxd)
+            (fn () => (Utf8Char.chr
+                           (bytesToInt32 LITTLE
+                                         (concat (VS.subslice(s,1,SOME 3),
+                                                  singleton 0w0))),
+                       VS.subslice(s,4,NONE)))
 
 
 fun unpackUString s =
-    case minLength s 1 andalso isType s 0wxE of
-        false => raise Type
-      | true => let val (s,cont) = unpackUnsafeString
-                                       (VS.subslice(s,1,NONE))
-                in case Utf8String.fromString s of
-                       SOME str => (str, cont)
-                     | _ => raise Type end
+    ensure s (1, 0wxe)
+           (fn () => let val (s,cont) = unpackUnsafeString
+                                            (VS.subslice(s,1,NONE))
+                     in case Utf8String.fromString s of
+                          SOME str => (str, cont)
+                        | _ => raise Type end)
 
 fun getListElem us s =
-    case minLength s 2 andalso isType s 0wx7 of
-      false => raise Type
-    | true => case VS.sub(s,1) of
-                0w0 => (NONE, VS.subslice(s,2,NONE))
-              | 0w1 => let val (elem, r) = us (VS.subslice(s,2,NONE))
-                       in (SOME elem, r) end
-              | _ => raise Type
+    ensure s (2, 0wx7)
+           (fn () => case VS.sub(s,1) of
+                       0w0 => (NONE, VS.subslice(s,2,NONE))
+                     | 0w1 => let val (elem, r) = us (VS.subslice(s,2,NONE))
+                              in (SOME elem, r) end
+                     | _ => raise Type)
 
 fun unpackList us s =
     case getListElem us s of
@@ -430,55 +416,45 @@ fun unpackList us s =
 fun getVectorSizeUnsafe v =
     case minLength v 4 of
       false => raise Type
-    | true => toInt32 (fromBytes LITTLE (VS.subslice(v,0,SOME 4)))
+    | true => bytesToInt32 LITTLE (VS.subslice(v,0,SOME 4))
 
 
 fun getVectorElemUnsafe us (v,i) =
-    let val offs = toInt32 (fromBytes LITTLE (VS.subslice(v,(i+1)*4,SOME 4)))
+    let val offs = bytesToInt32 LITTLE (VS.subslice(v,(i+1)*4,SOME 4))
     in car (us (VS.subslice(v,offs,NONE))) end
 
 
 fun getVectorSize v =
-    case minLength v 9 andalso isType v 0w8 of
-      false => raise Type
-    | true => getVectorSizeUnsafe (VS.subslice(v,5,NONE))
+    ensure v (9, 0w8) (fn () => getVectorSizeUnsafe (VS.subslice(v,5,NONE)))
 
 fun getVectorElem us (v,i) =
-    case minLength v 9 andalso isType v 0w8 of
-      false => raise Type
-    | true => getVectorElemUnsafe us (VS.subslice(v,5,NONE), i)
+    ensure v (9, 0w8)
+           (fn () => getVectorElemUnsafe us (VS.subslice(v,5,NONE), i))
 
 fun unpackVector us v =
-    case minLength v 9 andalso isType v 0w8 of
-      false => raise Type
-    | true =>
-      let val roffs = toInt32 (fromBytes LITTLE (VS.subslice(v,1,SOME 4)))
-      in (Vector.tabulate (getVectorSize v, fn i => getVectorElem us (v,i)),
-          VS.subslice(v,5+roffs, NONE)) end
+    ensure v (5, 0w8)
+           (fn () =>
+               let val roffs = bytesToInt32 LITTLE (VS.subslice(v,1,SOME 4))
+               in (Vector.tabulate (getVectorSize v,
+                                    (fn i => getVectorElem us (v,i))),
+                   VS.subslice(v,5+roffs, NONE)) end)
 
-fun getArraySize s =
-    case minLength s 9 andalso isType s 0w9 of
-      false => raise Type
-    | true => getVectorSizeUnsafe (VS.subslice(s,5,NONE))
+fun getArraySize a =
+    ensure a (9,0w9) (fn () => getVectorSizeUnsafe (VS.subslice(a,5,NONE)))
 
-fun getArrayElem us (v,i) =
-    case minLength v 9 andalso isType v 0w9 of
-      false => raise Type
-    | true => getVectorElemUnsafe us (VS.subslice(v,5,NONE),i)
+fun getArrayElem us (a,i) =
+    ensure a (9,0w9)
+           (fn () => getVectorElemUnsafe us (VS.subslice(a,5,NONE), i))
 
 fun unpackArray us a =
-    case minLength a 9 andalso isType a 0w9 of
-      false => raise Type
-    | true =>
-      let val roffs = toInt32 (fromBytes LITTLE (VS.subslice(a,1,SOME 4)))
-      in (Array.tabulate (getArraySize a, fn i => getArrayElem us (a,i)),
-          VS.subslice(a,5+roffs,NONE)) end
+    ensure a (9, 0w9)
+           (fn () =>
+               let val roffs = bytesToInt32 LITTLE (VS.subslice(a,1,SOME 4))
+               in (Array.tabulate (getArraySize a,
+                                   (fn i => getArrayElem us (a,i))),
+                   VS.subslice(a,5+roffs,NONE)) end)
 
-fun getOptionIsSome s =
-    case minLength s 2 andalso isType s 0wxb of
-      false => raise Type
-    | true => 0w1 = VS.sub(s,1)
-
+fun getOptionIsSome s = ensure s (2,0wxb) (fn () => 0w1 = VS.sub (s, 1))
 
 fun unpackOption us s =
     case getOptionIsSome s of
@@ -491,21 +467,20 @@ local
 in
 
 fun getTreeNode us s =
-    case minLength s 2 andalso isType s 0wxf of
-      false => raise Type
-    | true => case VS.sub(s,1) of
-                0w0 => {value = NONE,
-                        left = null,
-                        right = VS.subslice(s,2,NONE)}
-              | _ =>
-                (let val roffs = toInt32
-                                     (fromBytes LITTLE
-                                                (VS.subslice(s,1,SOME 4)))
-                     val (l,r) = us (VS.subslice (s,5,NONE))
-                 in {value = SOME l,
-                     left = r,
-                     right = VS.subslice(s,roffs,NONE)} end)
-                handle Subscript => raise Type
+    ensure s (2,0wxf)
+           (fn () =>
+               case VS.sub(s,1) of
+                 0w0 => {value = NONE,
+                         left = null,
+                         right = VS.subslice(s,2,NONE)}
+               | _ =>
+                 (let val roffs = bytesToInt32 LITTLE
+                                               (VS.subslice(s,1,SOME 4))
+                      val (l,r) = us (VS.subslice (s,5,NONE))
+                  in {value = SOME l,
+                      left = r,
+                      right = VS.subslice(s,roffs,NONE)} end)
+                 handle Subscript => raise Type)
 
 fun unpackTree us t =
     case getTreeNode us t of
@@ -513,6 +488,8 @@ fun unpackTree us t =
     | {value=SOME v,left=sl,right=sr} =>
       let val (r,rr) = unpackTree us sr
       in (Node(car (unpackTree us sl), v, r), rr) end
+
+
 
 end
 

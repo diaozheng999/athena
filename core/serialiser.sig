@@ -27,6 +27,99 @@ sig
   FF - Unsafe
 *)
 
+(* How are the various types serialised:
+
+  All serialisations has a header byte that indicates the type of the object
+  in the serialisation.
+
+  Unit - There'a only one entity. So it is just encoded with the header
+
+  Bool - The body byte is represented by 00 (false) or 01 (true)
+
+  Char - The body byte is represented by the ord of char
+
+  Int - The body bytes are encoded in little endian order, for compatibility
+        with x86 architectures
+
+  Single - The body bytes are encoded with IEEE 754 floating point (Single)
+
+  String - [ Hdr |-- len --| string ]
+           First 4 bytes encode the length of the string in little endian
+           The 5th byte onwards encode the string itself.
+
+  LargeInt - [ Hdr |-- len/sgn --| int ]
+             First 4 bytes encode the number of bytes the large int take.
+                 - if the length part is negative, it means that the int
+                   itself is a negative number
+             The integer itself is encoded in big endian format so that
+             error introduced for a partial transmission is reduced as the
+             more significant bits are transmitted.
+
+  List - nil : [ Hdr | 00 ]
+         cons : [ Hdr | 01 | elem | [rest]]
+         To facilitate recursion, two bytes are always used to identify the list
+         be it nil or an element. If it is followed by an element, then the rest
+         of the list. E.g. [[()],[]] is encoded as
+              07 01 [07 01 00     07 00] 07 01        [07 00] 07 00
+              \outer \inner \unit \nil   \outer cons   \nil   \outer nil
+
+  Vector - [ Hdr | size | num_elem | ptr | val ]
+           \ vec header/ \ vec body ==========/
+           The vector is encoded by the vector header which includes the header
+           byte (0x08) as well as the size (4 bytes) of the body sequence in
+           little endian encoding. This is followed by the vector body.
+
+           The vector body is encoded by:
+            - First 4 bytes are the number of elements in the vector in little
+              endian order.
+            - The next (num_elem * 4) bytes are the pointers. Each encodes the
+              offset of the nth element from the start of the vector body in a
+              4-byte little endian integer (int32)
+
+           E.g. packVector packInt #[1,2,3] is returned as :
+                0  1        5        9        13       17       21
+                08 1F000000 03000000 10000000 15000000 1A000000 0301000000
+                \hdr \size  \num_elem \offs_0 \offs_1  \offs_2  \enc of 1
+                26         31
+                0302000000 0303000000
+                \enc of 2  \enc of 3
+
+  Array - encoded the same way as vector
+
+  Order - the body is coded by 00 (EQUAL), 01 (GREATER) or FF (two's compiment
+          -1, LESS)
+
+  Option - NONE [0B 00], SOME v [0B 01 [v]]; similar concept to list
+
+  Word - 4 bytes in little endian
+
+  UTF-8 Char - encodes the code point in 3 bytes since valid valid codepoints
+               are from U+0000 to U+10FFFF
+
+  UTF-8 String - similar encoding to string, just encodes the encoded utf string
+
+  Tree - Empty [Hdr 00], Node(l,x,r) [ Hdr | offs | [x] | [l] | [r] ]
+         - behaves similar to list and options (since tree is algebraic as well)
+         - for Node encoding, offset is encoded as a 32-bit little-endian int,
+           and used to indicate the end of left branch/start of right branch
+         - this is possible because the minimum [[x] | [l]] is 3 bytes long
+           (achieved by Node(Empty,(),_):unit tree) offs has a min value of 8
+           and can never be 0. So if this byte is 0, then it must be Empty.
+
+         - E.g.    1       encoded as   0  1        5          10   12 13
+                    \                   0F 0C000000 0301000000 0F00 0F 18000000
+                     2                  \hdr \offs   \enc 1    \Empty \hdr \offs
+                    / \                 17         22 23       27         32
+                   3   4                0302000000 0F 0C000000 0303000000 0F00
+                                        \enc 2     \hdr \offs   \enc 3    \Empty
+                                        34   36 37       41         46   48
+                                        0F00 0F 0C000000 0304000000 0F00 0F00
+                                        \Empty \hdr \offs \enc 4    \Empty\Empty
+
+
+  Double - body is encoded in IEEE 754 64-bit floating point (double)
+
+*)
     datatype type_id = GENERIC
                      | INT
                      | LARGE_INT
@@ -148,35 +241,6 @@ sig
                       -> {value : 'a option,
                           left : serialised, right : serialised}
 
-
-
-    (* The following functions return the sizes of primitive types. This is
-       especially useful in checking of the size of variable-length serialised
-       objects such as strings or largeInts. *)
-
-    (*
-    val sizeInt : serialised -> int
-    val sizeLargeInt : serialised -> int
-    val sizeBool : serialised -> int
-    val sizeUnit : serialised -> int
-    val sizeChar : serialised -> int
-    val sizeString : serialised -> int
-    val sizeReal : serialised -> int
-    val sizeOrder : serialised -> int
-    *)
-
-    (* The following functions return the size of polymorphic datatypes. *)
-    (* NOTE : sizeVectorElement and sizeArrayElement does not perform bounds
-              check. *)
-
-    (*
-    val sizeList : (serialised -> int) -> serialised -> int
-    val sizeVector : (serialised -> int) -> serialised -> int
-    val sizeVectorElement : (serialised -> int) -> serialised -> int -> int
-    val sizeArray : (serialised -> int) -> serialised -> int
-    val sizeArrayElement : (serialised -> int) -> serialised -> int -> int
-    val sizeOption : (serialised -> int) -> serialised -> int
-    *)
 
 
     val toString : string -> serialised -> string
