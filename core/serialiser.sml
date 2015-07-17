@@ -1,4 +1,4 @@
-structure Serialiser (*: SERIALISER*) =
+structure Serialiser : SERIALISER =
 struct
 
 structure V = Word8Vector
@@ -6,10 +6,29 @@ structure VS = Word8VectorSlice
 structure W32 = Word32
 structure W8 = Word8
 structure W = Word
-open IEEEReal
+
 
 type serialised = VS.slice
-type type_expr = W8.word
+type type_repr = W8.word
+
+datatype type_id = GENERIC
+                     | INT
+                     | LARGE_INT
+                     | BOOL
+                     | UNIT
+                     | CHAR
+                     | STRING
+                     | REAL
+                     | UTF_CHAR
+                     | UTF_STRING
+                     | ORDER of type_id
+                     | TREE of type_id
+                     | VECTOR of type_id
+                     | ARRAY of type_id
+                     | SERIALISED
+                     | EXT
+
+
 datatype endian = LITTLE | BIG
 
 exception Type
@@ -18,7 +37,7 @@ exception Type
 val bits : V.vector = V.fromList
                            [0wx80,0wx40,0wx20,0wx10,0wx08,0wx04,0wx02,0wx01]
 
-
+val null : VS.slice = VS.full (V.fromList [])
 
 (* utility functions *)
 
@@ -55,6 +74,13 @@ fun normalise r =
     in (Real.signBit r, exp, (Real.abs r) / Math.pow(2.0, Real.fromInt exp)-1.0)
     end
 
+fun subnormal bits =
+    (Math.pow (2.0, 2.0 - Math.pow (2.0, Real.fromInt bits - 1.0)))
+
+local
+  open IEEEReal
+in
+
 fun realToBitVector v bits =
     let fun toBitVector' v 0 = []
           | toBitVector' v n =
@@ -66,12 +92,22 @@ fun realToBitVector v bits =
             end
     in Vector.fromList (toBitVector' v bits) end
 
+fun realFromBitVector v  =
+    Vector.foldr (fn (true, x) => x / 2.0 + 1.0
+                 | (false, x) => x / 2.0) 0.0 v / 2.0
+
 fun expToBits exp bits =
     let val k = W32.<<(0w1, W.fromInt (bits-1))
         val repr = W32.xorb(W32.fromInt (exp-1), k)
     in Vector.tabulate (bits,
                         (fn i =>
                          W32.andb(repr, W32.>>(k, W.fromInt i)) <> 0w0)) end
+
+fun expFromBits bits =
+    let val k = toInt32(W32.<<(0w1, W.fromInt(Vector.length bits-1)))-1
+        val repr = Vector.foldl (fn (true, x) => W32.orb(W32.<<(x,0w1),0w1)
+                                  | (false,x) => W32.<<(x,0w1)) 0w0 bits
+    in toInt32 repr - k end
 
 fun toBitVector s =
     Vector.tabulate (VS.length s*8,
@@ -90,23 +126,25 @@ fun fromBitVector bv =
     tabulate (Vector.length bv div 8,
               (fn i => bvsToWord (VectorSlice.slice (bv, i*8, SOME 8))))
 
-
+end
 
 
 (* external utility functions *)
 
 fun getType s = VS.sub(s,0) handle Subscript => raise Type
 
-fun toGeneric s = VS.subslice(s,1,NONE)
-
-fun fromGeneric (s,t) = concat (singleton t, s)
-
 fun isType s t = getType s = t
 
 fun cast (s,t1,t2) =
     case isType s t1 of
-        true => fromGeneric(toGeneric s, t2)
+        true => concat (singleton t2, VS.subslice(s,1,NONE))
       | false => raise Type
+
+fun toGeneric s = cast (s,getType s,0wxff)
+
+fun fromGeneric (s,t) = cast(s,0wxff,t)
+
+fun interpret (s,t) = concat(singleton t, s)
 
 
 
@@ -118,8 +156,14 @@ val packBool = let val T = VS.full (V.fromList [0w1,0w1])
                in (fn true => T
                   | false => F) end
 
+fun packChar c = tabulate (2, (fn 0 => 0wx2
+                              | _ => Byte.charToByte c))
+
 fun packInt i = concat (singleton 0wx3, toBytes LITTLE (W32.fromInt i))
 
+local
+  open IEEEReal
+in
 fun packFloat (exp,mts) r =
     case Real.class r of
         NAN _ => fromBitVector
@@ -139,15 +183,102 @@ fun packFloat (exp,mts) r =
                                          expToBits e exp,
                                          realToBitVector m mts]) end
       | SUBNORMAL =>
-        let val m = r / (Math.pow (2.0, 2.0 -
-                                        Math.pow (2.0, Real.fromInt exp - 1.0)))
+        let val m = r / subnormal exp
         in fromBitVector (Vector.concat [Vector.fromList [Real.signBit r],
                                          Vector.tabulate (exp, fn _ => false),
                                          realToBitVector m mts]) end
+end
 
 fun packReal r = concat (singleton 0wx04, packFloat (8, 23) r)
 
 fun packReal64 r = concat (singleton 0wx10, packFloat (11, 52) r)
+
+
+fun packUnsafeString s = let val len = size s
+                         in concat (toBytes LITTLE (W32.fromInt len),
+                                    VS.full (Byte.stringToBytes s)) end
+
+fun packString s = concat (singleton 0wx05,
+                           packUnsafeString s)
+
+fun packLargeInt i =
+    let
+      (* record largeInts in big-endian because we can approximate values
+         if bits gets chopped off, and we will not be orders of magnitudes off
+       *)
+      fun toList (0:IntInf.int) acc : W8.word list * W32.word= acc
+        | toList n (al,ln) = toList
+                                 (IntInf.div (n, 256))
+                                 (W8.fromLargeInt (IntInf.mod(n, 256))::al,
+                                  ln+0w1)
+
+      val (bits, l) = toList (IntInf.abs i) ([],0w0)
+      val len = case IntInf.< (i, 0) of
+                    true => ~l
+                  | _ => l
+    in concat(concat(singleton 0w6, toBytes LITTLE len),
+              VS.full (V.fromList bits)) end
+
+
+val packOrder = let
+  val less = tabulate (2, (fn 0 => 0wx0A | _ => 0wxFF))
+  val equal = tabulate (2, (fn 0 => 0wx0A | _ => 0wx00))
+  val greater = tabulate (2, (fn 0 => 0wx0A | _ => 0wx01))
+in fn LESS => less | EQUAL => equal | GREATER => greater end
+
+fun packWord w = concat (singleton 0wxC, toBytes LITTLE w)
+
+fun packUChar c =
+    (* we can save 1 byte because valid unicode code-points are
+       from U+0000 - U+10ffff *)
+    concat (singleton 0wxD,
+            VS.subslice(toBytes LITTLE (W32.fromInt (Utf8Char.ord c)),
+                        0,SOME 3))
+
+
+fun packUString s = concat (singleton 0wxE,
+                            packUnsafeString (Utf8String.toString s))
+
+(* polymorphic packing functions *)
+
+fun packList fs [] = tabulate (2, fn 0 => 0wx7 | _ => 0wx00)
+  | packList fs (x::xs) = concat (concat(singleton 0wx7, fs x),
+                                  packList fs xs)
+
+fun packVector fs v =
+    let val size = W32.fromInt (Vector.length v)
+        val serialised = Vector.map fs v
+        val (ptr,_) = Vector.foldl (fn (s,(chr,offs)) =>
+                                       let val len = W32.fromInt (VS.length s)
+                                       in (concat (chr, toBytes LITTLE offs),
+                                           offs+len) end)
+                                   (toBytes LITTLE size,0w4+0w4*size) serialised
+        val body = concat (ptr,  Vector.foldr concat null serialised)
+        val header = concat (singleton 0wx8,
+                             toBytes LITTLE (W32.fromInt (VS.length body)))
+    in concat(header, body) end
+
+fun packArray fs a = cast (packVector fs (Array.vector a), 0w8, 0w9)
+
+fun packOption _ NONE = tabulate(2, fn 0 => 0wxb | _ => 0wx00)
+  | packOption fs (SOME v) = concat (tabulate (2, fn 0 => 0wxb | _ => 0wx1),
+                                     fs v)
+
+local
+open Tree
+in
+fun packTree _ Empty = tabulate (2, fn 0 => 0wxf | _ => 0wx0)
+  | packTree fs (Node(l,x,r)) =
+    let val sx = fs x
+        val left = packTree fs l
+        val offset = 0w5+W32.fromInt (VS.length sx+VS.length left)
+    in VS.full (VS.concat [singleton 0wxf, toBytes LITTLE offset,
+                           sx, left, packTree fs r]) end
+end
+
+
+
+
 
 (* unpacking functions *)
 
@@ -167,11 +298,118 @@ fun unpackBool s =
                    | _ => raise Type,
                  VS.subslice(s,2,NONE))
 
+fun unpackChar s =
+    case minLength s 2 andalso isType s 0wx2 of
+        false => raise Type
+      | true => (Byte.byteToChar (VS.sub(s,1)),
+                 VS.subslice(s,2,NONE))
+
 fun unpackInt s =
     case minLength s 5 andalso isType s 0wx3 of
         true => (toInt32 (fromBytes LITTLE (VS.subslice(s,1,SOME 4))),
                  VS.subslice(s,5,NONE))
       | false => raise Type
+
+fun unpackFloat (exp, mts) s =
+    let val bits = toBitVector s
+        val sign = Vector.sub(bits, 0)
+        val expbits = VectorSlice.vector (VectorSlice.slice(bits, 1, SOME exp))
+        val mtsbits = VectorSlice.vector (VectorSlice.slice(bits, 1+exp,
+                                                            SOME mts))
+        datatype allOrNone = ALL | NONE | NEITHER
+
+        fun check bits = if Vector.all (fn x => x) bits then ALL
+                         else if Vector.all not bits then NONE
+                         else NEITHER
+        val r = case (check expbits, check mtsbits) of
+                    (ALL, NONE) => Real.posInf
+                  | (ALL, _) => Math.sqrt (~1.0) (* NaN *)
+                  | (NONE, NONE) => 0.0
+                  | (NONE, _) => realFromBitVector mtsbits * subnormal exp
+                  | _ => (1.0 + realFromBitVector mtsbits) *
+                         Math.pow(2.0, Real.fromInt (expFromBits expbits))
+    in case sign of
+           true => r * ~1.0
+         | false => r
+    end
+
+fun unpackReal s =
+    case minLength s 5 andalso isType s 0wx4 of
+        true => (unpackFloat (8, 23) (VS.subslice(s,1,SOME 4)),
+                 VS.subslice(s,5,NONE))
+      | false => raise Type
+
+fun unpackReal64 s =
+    case minLength s 9 andalso isType s 0wx10 of
+        true => (unpackFloat (11, 52) (VS.subslice(s,1,SOME 8)),
+                 VS.subslice(s,9,NONE))
+      | false => raise Type
+
+fun unpackUnsafeString s =
+    case minLength s 4 of
+        true =>
+        let val len = toInt32 (fromBytes LITTLE (VS.subslice(s,0,SOME 4)))
+        in (Byte.unpackStringVec(VS.subslice(s,4,SOME len)),
+            VS.subslice(s,4+len,NONE)) end
+      | false => raise Type
+
+fun unpackString s =
+    case minLength s 1 andalso isType s 0wx5 of
+        true => unpackUnsafeString (VS.subslice(s,1,NONE))
+      | false => raise Type
+
+fun unpackLargeInt s =
+    case minLength s 5 andalso isType s 0wx6 of
+        true => let val len = toInt32 (fromBytes LITTLE
+                                                 (VS.subslice(s,1,SOME 4)))
+                    fun build len = VS.foldl (fn (b,x) =>
+                                                 IntInf.+(IntInf.*(x,256),
+                                                          W8.toLargeInt b))
+                                             0
+                                             (VS.subslice(s,5,SOME len))
+                in case len<0 of
+                       true => (~(build (~len)),
+                                VS.subslice(s,5-len,NONE))
+                     | false =>(build len, VS.subslice(s, 5+len, NONE))
+                end
+      | false => raise Type
+
+fun unpackOrder s =
+    case minLength s 2 andalso isType s 0wxA of
+        false => raise Type
+      | true => case VS.sub(s,1) of
+                    0wxFF => (LESS, VS.subslice(s,2,NONE))
+                  | 0wx00 => (EQUAL, VS.subslice(s,2,NONE))
+                  | 0wx01 => (GREATER, VS.subslice(s,2,NONE))
+                  | _ => raise Type
+
+
+fun unpackWord s =
+    case minLength s 5 andalso isType s 0wxC of
+        true => (fromBytes LITTLE (VS.subslice(s,1,SOME 4)),
+                 VS.subslice(s,5,NONE))
+      | false => raise Type
+
+
+fun unpackUChar s =
+    case minLength s 4 andalso isType s 0wxD of
+        false => raise Type
+      | true => (Utf8Char.chr
+                     (toInt32
+                          (fromBytes LITTLE
+                                     (concat (VS.subslice(s,1,SOME 3),
+                                              singleton 0w0)))),
+                 VS.subslice(s,4,NONE))
+
+
+fun unpackUString s =
+    case minLength s 1 andalso isType s 0wxE of
+        false => raise Type
+      | true => let val (s,cont) = unpackUnsafeString
+                                       (VS.subslice(s,1,NONE))
+                in case Utf8String.fromString s of
+                       SOME str => (str, cont)
+                     | _ => raise Type end
 
 
 
@@ -187,5 +425,19 @@ fun fromByteVector v = tabulate (Vector.length v, fn i => Vector.sub (v,i))
 
 fun bitVectorToString b =
     Vector.foldr (op ^) "" (Vector.map (fn true => "1" | false => "0") b)
+
+
+
+end
+
+
+
+signature SERIALISABLE =
+sig
+    type t
+
+    val serialise : t -> Serialiser.serialised
+    val unserialise : Serialiser.serialised -> t
+    val size : Serialiser.serialised -> int
 
 end
