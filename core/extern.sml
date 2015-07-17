@@ -7,6 +7,7 @@ structure Env = Env
 structure Stack = Stack
 structure Task = Task
 structure TopLevel = Core
+structure Tree = Tree
 structure Serialiser = Serialiser
 structure Utf8Char = Utf8Char
 structure Utf8String = Utf8String

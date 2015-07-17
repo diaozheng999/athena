@@ -4,12 +4,17 @@ local
         env.sig
         env.sml
         env_mlton.sml
+        contracts.sig
+        contracts.sml
         string.sig
         utf8common.sml
         utf8char.sml
         utf8string.sml
         core.sig
         core.sml
+        enum_key.sig
+        enum_key.sml
+        base_cmp.sml
         tree.sig
         tree.sml
         bst.sig
@@ -21,8 +26,6 @@ local
         thread.sml
         serialiser.sig
         serialiser.sml
-        regexp.sig
-        regexp.sml
         extern.sig
         extern.sml
 in
@@ -30,8 +33,4 @@ in
         signature ATHENA_CORE
         signature ATHENA_CORE_SERIALISABLE
         structure AthenaCore
-        structure RegExp
-        structure Tree
-        functor BST
-        functor RedBlackTree
 end

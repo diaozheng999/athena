@@ -3,7 +3,6 @@ Library (0.0.1)
         signature ATHENA_CORE
         signature ATHENA_CORE_SERIALISABLE
         structure AthenaCore
-        structure Tree
 is
         $/basis.cm
         $/smlnj-lib.cm

@@ -15,13 +15,14 @@ sig
     structure Serialiser : SERIALISER
     structure Char : ATHENA_CHAR
     structure String : ATHENA_STRING
+    structure Tree : TREE
     structure Utf8Char : ATHENA_CHAR
     structure Utf8String : ATHENA_STRING
     structure Cmp : sig
-                structure Int : ORD_KEY
-                structure Char : ORD_KEY
+                structure Int : ENUM_KEY
+                structure Char : ENUM_KEY
                 structure String : ORD_KEY
-                structure Utf8Char : ORD_KEY
+                structure Utf8Char : ENUM_KEY
                 structure Utf8String : ORD_KEY
               end
 

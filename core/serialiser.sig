@@ -114,7 +114,7 @@ sig
                      -> 'a list * serialised
     val getListElem : (serialised -> 'a * serialised)
                       -> serialised
-                      -> 'a * serialised
+                      -> 'a option * serialised
 
     val unpackVector : (serialised -> 'a * serialised)
                        -> serialised
@@ -132,18 +132,23 @@ sig
                        -> serialised * int
                        -> 'a
 
+
     val unpackOption : (serialised -> 'a * serialised)
                        -> serialised
                        -> 'a option * serialised
 
     val getOptionIsSome : serialised -> bool
 
+
     val unpackTree : (serialised -> 'a * serialised)
                      -> serialised
                      -> 'a Tree.tree * serialised
     val getTreeNode : (serialised -> 'a * serialised)
                       -> serialised
-                      -> {value : 'a, left : serialised, right : serialised}
+                      -> {value : 'a option,
+                          left : serialised, right : serialised}
+
+
 
     (* The following functions return the sizes of primitive types. This is
        especially useful in checking of the size of variable-length serialised

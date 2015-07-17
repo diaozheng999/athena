@@ -7,6 +7,7 @@ structure W32 = Word32
 structure W8 = Word8
 structure W = Word
 
+open Core
 
 type serialised = VS.slice
 type type_repr = W8.word
@@ -242,8 +243,8 @@ fun packUString s = concat (singleton 0wxE,
 (* polymorphic packing functions *)
 
 fun packList fs [] = tabulate (2, fn 0 => 0wx7 | _ => 0wx00)
-  | packList fs (x::xs) = concat (concat(singleton 0wx7, fs x),
-                                  packList fs xs)
+  | packList fs (x::xs) = concat (tabulate (2, fn 0 => 0wx7 | _ => 0wx1),
+                                  concat(fs x,packList fs xs))
 
 fun packVector fs v =
     let val size = W32.fromInt (Vector.length v)
@@ -411,7 +412,109 @@ fun unpackUString s =
                        SOME str => (str, cont)
                      | _ => raise Type end
 
+fun getListElem us s =
+    case minLength s 2 andalso isType s 0wx7 of
+      false => raise Type
+    | true => case VS.sub(s,1) of
+                0w0 => (NONE, VS.subslice(s,2,NONE))
+              | 0w1 => let val (elem, r) = us (VS.subslice(s,2,NONE))
+                       in (SOME elem, r) end
+              | _ => raise Type
 
+fun unpackList us s =
+    case getListElem us s of
+      (NONE, r) => ([], r)
+    | (SOME x, r) => let val (rest, r') = unpackList us r
+                     in (x::rest, r') end
+
+fun getVectorSizeUnsafe v =
+    case minLength v 4 of
+      false => raise Type
+    | true => toInt32 (fromBytes LITTLE (VS.subslice(v,0,SOME 4)))
+
+
+fun getVectorElemUnsafe us (v,i) =
+    let val offs = toInt32 (fromBytes LITTLE (VS.subslice(v,(i+1)*4,SOME 4)))
+    in car (us (VS.subslice(v,offs,NONE))) end
+
+
+fun getVectorSize v =
+    case minLength v 9 andalso isType v 0w8 of
+      false => raise Type
+    | true => getVectorSizeUnsafe (VS.subslice(v,5,NONE))
+
+fun getVectorElem us (v,i) =
+    case minLength v 9 andalso isType v 0w8 of
+      false => raise Type
+    | true => getVectorElemUnsafe us (VS.subslice(v,5,NONE), i)
+
+fun unpackVector us v =
+    case minLength v 9 andalso isType v 0w8 of
+      false => raise Type
+    | true =>
+      let val roffs = toInt32 (fromBytes LITTLE (VS.subslice(v,1,SOME 4)))
+      in (Vector.tabulate (getVectorSize v, fn i => getVectorElem us (v,i)),
+          VS.subslice(v,5+roffs, NONE)) end
+
+fun getArraySize s =
+    case minLength s 9 andalso isType s 0w9 of
+      false => raise Type
+    | true => getVectorSizeUnsafe (VS.subslice(s,5,NONE))
+
+fun getArrayElem us (v,i) =
+    case minLength v 9 andalso isType v 0w9 of
+      false => raise Type
+    | true => getVectorElemUnsafe us (VS.subslice(v,5,NONE),i)
+
+fun unpackArray us a =
+    case minLength a 9 andalso isType a 0w9 of
+      false => raise Type
+    | true =>
+      let val roffs = toInt32 (fromBytes LITTLE (VS.subslice(a,1,SOME 4)))
+      in (Array.tabulate (getArraySize a, fn i => getArrayElem us (a,i)),
+          VS.subslice(a,5+roffs,NONE)) end
+
+fun getOptionIsSome s =
+    case minLength s 2 andalso isType s 0wxb of
+      false => raise Type
+    | true => 0w1 = VS.sub(s,1)
+
+
+fun unpackOption us s =
+    case getOptionIsSome s of
+      false => (NONE, VS.subslice(s,2,NONE))
+    | true => let val (v,r) = us (VS.subslice(s,2,NONE))
+              in (SOME v, r) end
+
+local
+  open Tree
+in
+
+fun getTreeNode us s =
+    case minLength s 2 andalso isType s 0wxf of
+      false => raise Type
+    | true => case VS.sub(s,1) of
+                0w0 => {value = NONE,
+                        left = null,
+                        right = VS.subslice(s,2,NONE)}
+              | _ =>
+                (let val roffs = toInt32
+                                     (fromBytes LITTLE
+                                                (VS.subslice(s,1,SOME 4)))
+                     val (l,r) = us (VS.subslice (s,5,NONE))
+                 in {value = SOME l,
+                     left = r,
+                     right = VS.subslice(s,roffs,NONE)} end)
+                handle Subscript => raise Type
+
+fun unpackTree us t =
+    case getTreeNode us t of
+      {value=NONE, left=_,right=r} => (Empty, r)
+    | {value=SOME v,left=sl,right=sr} =>
+      let val (r,rr) = unpackTree us sr
+      in (Node(car (unpackTree us sl), v, r), rr) end
+
+end
 
 (* debug functions *)
 fun wordToString w = let val s = W8.toString w
