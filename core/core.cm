@@ -3,6 +3,7 @@ Library (0.0.1)
         signature ATHENA_CORE
         signature ATHENA_CORE_SERIALISABLE
         structure AthenaCore
+        structure UUID
 is
         $/basis.cm
         $/smlnj-lib.cm
@@ -32,5 +33,7 @@ is
         thread.sml
         serialiser.sig
         serialiser.sml
+        uuid.sig
+        uuid.sml
         extern.sig
         extern.sml
