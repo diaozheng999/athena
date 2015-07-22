@@ -8,7 +8,7 @@ structure VS = Word8VectorSlice
 
 type uuid = V.vector
 datatype generator = TIME | RAND | RAND_T
-datatype expr = BINARY | HEX | UUID | BASE64
+datatype expr = BINARY | HEX | UUID
 
 val timer = Timer.totalRealTimer ()
 
@@ -58,7 +58,6 @@ fun a >= b = case compare (a,b) of
 
 fun toString BINARY s = Serialiser.bitVectorToString
                             (Serialiser.toBitVector (Word8VectorSlice.full s))
-  | toString BASE64 s = Base64.encode s
   | toString HEX s = Serialiser.toString "" (Word8VectorSlice.full s)
   | toString GUID s = String.map
                           (Char.toLower)

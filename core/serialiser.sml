@@ -168,28 +168,35 @@ local
   open IEEEReal
 in
 fun packFloat (exp,mts) r =
-    case Real.class r of
-        NAN _ => fromBitVector
-                     (Vector.concat [Vector.fromList [Real.signBit r],
-                                     Vector.tabulate (exp+mts, fn _ => true)])
-      | INF => fromBitVector
-                   (Vector.concat [Vector.fromList [Real.signBit r],
-                                   Vector.tabulate (exp, fn _ => true),
-                                   Vector.tabulate (mts, fn _ => false)])
-      | ZERO => fromBitVector
-                    (Vector.concat [Vector.fromList [Real.signBit r],
-                                    Vector.tabulate (exp, fn _ => false),
-                                    Vector.tabulate (mts, fn _ => false)])
-      | NORMAL =>
+    case (Real.class r, Real.isNan r) of
+        (_,true) => fromBitVector
+                        (Vector.concat [Vector.fromList [Real.signBit r],
+                                        Vector.tabulate (exp+mts,fn _ => true)])
+      | (INF,_) => fromBitVector
+                       (Vector.concat [Vector.fromList [Real.signBit r],
+                                       Vector.tabulate (exp, fn _ => true),
+                                       Vector.tabulate (mts, fn _ => false)])
+      | (ZERO,_) => fromBitVector
+                        (Vector.concat [Vector.fromList [Real.signBit r],
+                                        Vector.tabulate (exp, fn _ => false),
+                                        Vector.tabulate (mts, fn _ => false)])
+      | (NORMAL,_) =>
         let val (s,e,m) = normalise r
         in fromBitVector (Vector.concat [Vector.fromList [s],
                                          expToBits e exp,
                                          realToBitVector m mts]) end
-      | SUBNORMAL =>
+      | (SUBNORMAL,_) =>
         let val m = r / subnormal exp
         in fromBitVector (Vector.concat [Vector.fromList [Real.signBit r],
                                          Vector.tabulate (exp, fn _ => false),
                                          realToBitVector m mts]) end
+
+      (* this case should never be evaluated since for all reals, if isNan
+         returns true, then Real.class should return NAN of something, hence
+         the rest of the cases are exhaustive. However, since the compiler
+         does not know this, the following case is written to override compile
+         errors. *)
+      | (_,_) => raise Fail "Unexpected evaluation of reals."
 end
 
 fun packReal r = concat (singleton 0wx04, packFloat (8, 23) r)

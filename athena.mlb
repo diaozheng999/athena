@@ -3,6 +3,7 @@ local
 	$(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
 	core/core.mlb
 	data/data.mlb
+        program/program.mlb
 	athena.sig
 	athena.sml
 in

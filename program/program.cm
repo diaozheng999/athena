@@ -1,5 +1,12 @@
-Group is
-
+Library (0.0.1)
+        signature ATHENA_PROGRAM
+        structure AthenaProgram
+is
       $/basis.cm
+      $/smlnj-lib.cm
       ../core/core.cm
       ../data/data.cm
+      bootstrapper.sig
+      bootstrapper.sml
+      extern.sig
+      extern.sml

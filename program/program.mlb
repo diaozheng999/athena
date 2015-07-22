@@ -1,0 +1,13 @@
+local
+        $(SML_LIB)/basis/basis.mlb
+        $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+        ../core/core.mlb
+        ../data/data.mlb
+        bootstrapper.sig
+        bootstrapper.sml
+        extern.sig
+        extern.sml
+in
+        signature ATHENA_PROGRAM
+        structure AthenaProgram
+end

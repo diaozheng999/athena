@@ -4,7 +4,7 @@ sig
   eqtype uuid
 
   datatype generator = TIME | RAND | RAND_T
-  datatype expr = BINARY | HEX | UUID | BASE64
+  datatype expr = BINARY | HEX | UUID
 
   val generate : unit -> uuid
 

@@ -18,6 +18,7 @@ sig
     structure Tree : TREE
     structure Utf8Char : ATHENA_CHAR
     structure Utf8String : ATHENA_STRING
+    structure Contracts : CONTRACTS
     structure Cmp : sig
                 structure Int : ENUM_KEY
                 structure Char : ENUM_KEY

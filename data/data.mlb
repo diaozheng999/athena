@@ -4,6 +4,8 @@ local
 	../core/core.mlb
 	sequence.sig
 	sequence.sml
+        stream.sig
+        stream.sml
 	event.sig
 	event.sml
 	extern.sig

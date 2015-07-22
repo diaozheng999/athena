@@ -1,10 +1,11 @@
 Library (0.0.1)
-	signature ATHENA
-	structure Athena
+        signature ATHENA
+        structure Athena
 is
-	$/basis.cm
-	$/smlnj-lib.cm
-	core/core.cm
-	data/data.cm
-	athena.sig
-	athena.sml
+        $/basis.cm
+        $/smlnj-lib.cm
+        core/core.cm
+        data/data.cm
+        program/program.cm
+        athena.sig
+        athena.sml

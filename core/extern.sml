@@ -11,6 +11,7 @@ structure Tree = Tree
 structure Serialiser = Serialiser
 structure Utf8Char = Utf8Char
 structure Utf8String = Utf8String
+structure Contracts = Contracts
 
 structure Char :> ATHENA_CHAR
                       where type char = char

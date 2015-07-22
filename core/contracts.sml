@@ -1,4 +1,4 @@
-structure Contracts : CONTRACTS =
+structure Contracts : CONTRACTS  =
 struct
 
   type ('a, 'b) function = {requires : 'a -> bool,
@@ -9,33 +9,41 @@ struct
   exception PostconditionFailure
   exception AssertionFailure
 
-  val assert = case Env.debug of
-                   Env.RELEASE => (fn _ _ => ())
-                 | _ => (fn f a => case f a of
-                                       false => raise AssertionFailure
-                                     | true => ())
-
 
   fun tautology _ = true
 
-  val call = case Env.debug of
-                 Env.CONTRACT =>
-                 (fn {requires:pre, ensures:post,f:f} x =>
-                     case pre x of
-                         false => raise PreconditionFailure
-                       | true =>
-                         let val y = f x
-                         in case post y of
-                                false => raise PostconditionFailure
-                              | true => y
-                         end)
-               | _ => fn f x => (#f f) x
+  fun callWithoutContracts (f:('a,'b) function) x = (#f f) x
+
+  fun callWithContracts ({requires = precond,
+                         ensures = postcond,
+                         f = f}:('a,'b) function) x =
+      case precond x of
+          false => raise PreconditionFailure
+        | true => let val y = f x
+                  in case postcond y of
+                         false => raise PostconditionFailure
+                       | true => y
+                  end
+
+
+
+  fun call f x = case Env.debug of
+                     Env.CONTRACT => callWithContracts f x
+                   | _ => callWithoutContracts f x
+
+
+  fun assert f x = case Env.debug of
+                       Env.CONTRACT => (case call f x of
+                                            false => raise AssertionFailure
+                                          | true => ())
+                     | _ => ()
 
   fun fromFn f = {requires = tautology, ensures = tautology, f = f}
 
-  val toFn = case Env.debug of
-                 Env.CONTRACT => call
-               | _ => #f
+  fun toFn f = call f
 
+
+  fun isTotal f = true
+  fun isTotalFn f = true
 
 end
