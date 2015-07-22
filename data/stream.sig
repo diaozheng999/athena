@@ -4,22 +4,26 @@ sig
     type 'a task
     type 'a stream
     type 'a pair
-    type 'a sequence
+    type 'a seq
 
     val append : 'a stream * 'a stream -> 'a stream task
 
-    val read : 'a stream -> ('a option * 'a stream) task
+    val read : 'a stream -> ('a * 'a stream) option task
 
-    val write : ('a stream * 'a) -> 'a stream task
+    val cons : 'a -> 'a stream -> 'a stream task
 
-    val flush : 'a stream -> 'a stream task
+    val empty : unit -> 'a stream task
 
-    val seek : 'a stream * int -> 'a stream task
-
-    val writeSeq : 'a stream * 'a seq -> 'a stream task
+    val isEmpty : 'a stream -> bool task
 
     val toSeq : 'a stream -> 'a seq task
 
     val fromSeq : 'a seq -> 'a stream task
 
+    val ::: : 'a * ('b -> 'a stream task) -> 'b
+              -> 'a stream task
+
+    val singleton : 'a -> 'a stream task
+
+    val map : ('a -> 'b task) -> 'a stream -> 'b stream task
 end

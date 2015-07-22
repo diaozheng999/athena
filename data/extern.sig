@@ -1,7 +1,8 @@
-signature ATHENA_DATA = 
+signature ATHENA_DATA =
 sig
 
-    structure Seq : SEQUENCE
-    structure Event : EVENT
+  structure Seq : SEQUENCE
+  structure Stream : STREAM
+  structure Event : EVENT
 
 end

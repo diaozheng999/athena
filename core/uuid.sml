@@ -2,6 +2,7 @@ structure UUID :> UUID  =
 struct
 
 structure W32 = Word32
+structure W8 = Word8
 structure V = Word8Vector
 structure VS = Word8VectorSlice
 
@@ -69,5 +70,13 @@ fun toString BINARY s = Serialiser.bitVectorToString
                            ^ Serialiser.toString "" (VS.slice(s,8,NONE)))
 
 
-fun fromString s = raise Fail "NYI"
+fun fromString s =
+    let val s = String.concat (String.tokens (fn #"-"=>true | _ =>false) s)
+    in
+      V.tabulate
+          (size s div 2,
+           (fn i => Option.valOf (W8.fromString (String.extract(s,i*2,SOME 2)))
+          ))
+    end
+
 end

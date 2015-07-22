@@ -30,7 +30,7 @@ sig
 
     (* joins the execution of two tasks, if either one is not completed,
        execute both simulteneously. This is similar to
-       
+
        task1 await (fn r1 => task 2 await (fn r2 => yield (r1, r2)))
 
        however, unlike the example above, it executes task1 and task2
@@ -62,6 +62,8 @@ sig
 
     val <|| : unit task * unit task -> unit task
 
+    val select : {cond : bool task, true : 'b task, false : 'b task}
+                 -> 'b task
 end
 
 (*
@@ -82,7 +84,7 @@ sig
 
     val start : 'a task -> 'a thread
 
-    
+
 
 end
 *)

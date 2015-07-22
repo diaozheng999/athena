@@ -15,7 +15,7 @@ fun yield x = Do (fn () => Result x)
 
 fun suspend t = Do (fn () => Run (t ()))
 
-fun await (task, cont) = 
+fun await (task, cont) =
     Do (fn () =>
 	   case eval task of
 	       Result v => Run (cont v)
@@ -23,7 +23,7 @@ fun await (task, cont) =
 
 infix 3 await
 
-fun run task = 
+fun run task =
     case eval task of
 	Result v => v
       | Run step => run step
@@ -41,7 +41,7 @@ fun join (t1 : 'a task, t2 : 'b task) : ('a * 'b) task =
 	   case eval t1 of
 	       Result v1 => Run (t2 await (fn v2 => yield (v1, v2)))
 	     | Run step1 =>
-	       Run (Do (fn () => 
+	       Run (Do (fn () =>
 			   case eval t2 of
 			       Result v2 => Run (step1 await (fn v1 => yield (v1, v2)))
 			     | Run step2 => Run (join (step1, step2)))))
@@ -74,9 +74,9 @@ fun concurrent (tasklist : 'a task vector) (i : 'a) : 'a vector task =
 		end)
     end
 
-					 
 
-			
+
+
 fun ignore task = task await (fn _ => yield ())
 
 fun async f x = Do (fn () => Result (f x))
@@ -89,5 +89,7 @@ fun ||> (t1, t2) = t1 await (fn () => t2)
 
 fun <|| (t1, t2) = t2 await (fn () => t1)
 
-end
+fun select {cond=cond, true=ifT, false = ifF} = cond await (fn true => ifT
+                                                             | false => ifF)
 
+end

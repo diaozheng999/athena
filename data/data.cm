@@ -1,4 +1,4 @@
-Library (0.0.1) 
+Library (0.0.1)
 	signature ATHENA_DATA
 	structure AthenaData
 is
@@ -7,6 +7,8 @@ is
       	../core/core.cm
      	sequence.sig
       	sequence.sml
+        stream.sig
+        stream.sml
       	event.sig
       	event.sml
       	extern.sig
