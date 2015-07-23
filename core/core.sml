@@ -43,4 +43,7 @@ val u_size = Utf8String.size
 val u_str = Utf8String.str
 val u_substring = Utf8String.substring
 
+
+fun V l = Vector.fromList l
+fun A l = Array.fromList l
 end

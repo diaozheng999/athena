@@ -127,4 +127,8 @@ fun isEmpty seq = yield (Vector.length seq = 0)
 
 fun fromList l = yield (Vector.fromList l)
 
+fun fromVector v = yield v
+
+fun fromArray a = yield (Array.vector a)
+
 end

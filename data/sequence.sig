@@ -123,4 +123,6 @@ sig
 
 
     val fromList : 'a list -> 'a seq task
+    val fromVector : 'a vector -> 'a seq task
+    val fromArray : 'a array -> 'a seq task
 end

@@ -42,12 +42,14 @@ signature CORE = sig
     val snd : ('a * 'b -> 'c) * 'a -> 'b -> 'c
 
 
+    (* array and vector shorthands *)
+    val V: 'a list -> 'a vector
+    val A: 'a list -> 'a array
 
     (* utf-8 string functions *)
     val u : string -> Utf8String.string
     val % : string -> Utf8Char.char
-    val ^^ : Utf8String.string * Utf8String.string -> Utf8String.string
-    val u_chr : int -> Utf8Char.char
+    val ^^ : Utf8String.string * Utf8String.string -> Utf8String.string     val u_chr : int -> Utf8Char.char
     val u_concat : Utf8String.string list -> Utf8String.string
     val u_explode : Utf8String.string -> Utf8Char.char list
     val u_implode : Utf8Char.char list -> Utf8String.string
