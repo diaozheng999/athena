@@ -18,6 +18,10 @@ sig
     structure Tree : TREE
     structure Utf8Char : ATHENA_CHAR
     structure Utf8String : ATHENA_STRING
+    structure Word : ATHENA_WORD
+    structure Word8 : ATHENA_WORD
+    structure Word32 : ATHENA_WORD
+    structure Word64 : ATHENA_WORD
     structure Contracts : CONTRACTS
     structure Cmp : sig
                 structure Int : ENUM_KEY

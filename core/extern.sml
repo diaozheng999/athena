@@ -13,6 +13,12 @@ structure Utf8Char = Utf8Char
 structure Utf8String = Utf8String
 structure Contracts = Contracts
 
+structure Word = AthenaWord
+structure Word8 = AthenaWord8
+structure Word32 = AthenaWord32
+structure Word64 = AthenaWord64
+
+
 structure Char :> ATHENA_CHAR
                       where type char = char
                       where type string = String.string

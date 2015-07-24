@@ -17,6 +17,9 @@ is
         utf8common.sml
         utf8char.sml
         utf8string.sml
+	word.sig
+	word64.sml
+	word_smlnj.sml
         core.sig
         core.sml
         enum_key.sig

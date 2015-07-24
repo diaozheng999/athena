@@ -1,5 +1,6 @@
 local
         $(SML_LIB)/basis/basis.mlb
+	$(SML_LIB)/basis/mlton.mlb
         $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
         env.sig
         env.sml
@@ -10,6 +11,8 @@ local
         utf8common.sml
         utf8char.sml
         utf8string.sml
+	word.sig
+	word_mlton.sml
         core.sig
         core.sml
         enum_key.sig
