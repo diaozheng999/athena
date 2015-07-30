@@ -25,12 +25,12 @@ local
         rbt.sml
         stack.sig
         stack.sml
-        thread.sig
-        thread.sml
         serialiser.sig
         serialiser.sml
         uuid.sig
         uuid.sml
+	heap.sig
+	heap.sml
         extern.sig
         extern.sml
 in
@@ -38,4 +38,6 @@ in
         signature ATHENA_CORE
         signature ATHENA_CORE_SERIALISABLE
         structure AthenaCore
+	functor RBTFn
+	functor BSTFn
 end

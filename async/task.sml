@@ -1,7 +1,7 @@
 structure Task : TASK =
 struct
 
-open Core
+open AthenaCore.TopLevel
 
 datatype 'a task = Do of unit -> 'a state
 and 'a state = Result of 'a | Run of 'a task

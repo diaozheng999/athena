@@ -5,13 +5,14 @@ open Core
 
 structure Env = Env
 structure Stack = Stack
-structure Task = Task
 structure TopLevel = Core
 structure Tree = Tree
 structure Serialiser = Serialiser
 structure Utf8Char = Utf8Char
 structure Utf8String = Utf8String
 structure Contracts = Contracts
+structure Heap = Heap
+structure UUID = UUID
 
 structure Word = AthenaWord
 structure Word8 = AthenaWord8
@@ -31,5 +32,8 @@ structure String :> ATHENA_STRING
 
 structure Cmp = Cmp
 
-
 end
+ 
+
+functor RBTFn (T:ORD_KEY) = RedBlackTree(T)
+functor BSTFn (T:ORD_KEY) = BST(T)

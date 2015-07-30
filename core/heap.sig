@@ -12,6 +12,8 @@ sig
 
     val pop : 'a heap -> 'a option * 'a heap
 
+    val peek : 'a heap -> 'a option
+
     val clone : 'a heap -> 'a heap
 
     val toList : 'a heap -> 'a option list

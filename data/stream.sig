@@ -1,10 +1,11 @@
+
+type 'a task = 'a AthenaAsync.Task.task
+type 'a seq = 'a Seq.seq
+
 signature STREAM =
 sig
 
-    type 'a task
     type 'a stream
-    type 'a pair
-    type 'a seq
 
     val append : 'a stream * 'a stream -> 'a stream task
 

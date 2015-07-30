@@ -5,7 +5,6 @@ structure Utf8String :> ATHENA_STRING
 struct
 open Utf8Helper
 
-
 type char = Utf8Char.char
 type string = char vector
 

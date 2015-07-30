@@ -2,7 +2,7 @@ local
         $(SML_LIB)/basis/basis.mlb
         $(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
         ../core/core.mlb
-        ../data/data.mlb
+        ../async/async.mlb
         bootstrapper.sig
         bootstrapper.sml
         extern.sig

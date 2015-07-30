@@ -1,7 +1,9 @@
+
+type 'a task = 'a AthenaAsync.Task.task
+
 signature SEQUENCE =
 sig
 
-    type 'a task
     type 'a seq
 
     datatype 'a pair = Pair of 'a * 'a | Singleton of 'a

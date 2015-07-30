@@ -1,14 +1,15 @@
 structure Event : EVENT =
 struct
 
+open Task
 open AthenaCore
-open AthenaCore.Task
 open AthenaCore.Serialiser
+
 infix 3 await
 infix 3 <| <||
 infixr 3 |> ||>
 
-structure T = AthenaCore.Task
+structure T = Task
 
 exception Event
 
@@ -37,7 +38,7 @@ val raiseEvent = ref (fn (_:string, _:serialised) => yield ())
 fun startEventSystem (reg:registry) =
 
     let fun addListener' (event:string) listener =
-            case HashTable.find reg event of
+	    case HashTable.find reg event of
                 NONE => (HashTable.insert reg (event, mkEvent ());
                          addListener' event listener)
               | (SOME (n, ref ldic)) => yield (n:= !n + 1;
@@ -45,11 +46,12 @@ fun startEventSystem (reg:registry) =
                                                                 (!n, listener);
                                                !n)
 
-        fun removeListener' event lid =
+        fun removeListener' event lid =			   
             case HashTable.find reg event of
                 NONE => yield ()
               | SOME (n, ref listeners) =>
                 yield (General.ignore (HashTable.remove listeners lid))
+		
 
         fun raiseEvent' (event, arg) =
             case HashTable.find reg event of
@@ -63,8 +65,7 @@ fun startEventSystem (reg:registry) =
         val () = (addListener := addListener';
                   removeListener := removeListener';
                   raiseEvent := raiseEvent')
+
     in yield () end
-
-
 
 end

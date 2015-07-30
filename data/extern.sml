@@ -3,6 +3,5 @@ struct
 
 structure Seq = Seq
 structure Stream = Stream
-structure Event = Event
 
 end

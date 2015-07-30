@@ -5,7 +5,7 @@ is
       $/basis.cm
       $/smlnj-lib.cm
       ../core/core.cm
-      ../data/data.cm
+      ../async/async.cm
       bootstrapper.sig
       bootstrapper.sml
       extern.sig

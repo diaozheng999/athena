@@ -5,11 +5,10 @@ is
 	$/basis.cm
       	$/smlnj-lib.cm
       	../core/core.cm
+	../async/async.cm
      	sequence.sig
       	sequence.sml
         stream.sig
         stream.sml
-      	event.sig
-      	event.sml
       	extern.sig
       	extern.sml

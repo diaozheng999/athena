@@ -1,11 +1,9 @@
-structure Bootstrapper :> BOOTSTRAPPER
-                              where type 'a task = 'a AthenaCore.Task.task
- =
+structure Bootstrapper :> BOOTSTRAPPER =
 struct
 
 open AthenaCore
-open AthenaData
-open AthenaCore.Task
+open AthenaAsync
+open AthenaAsync.Task
 infix ||> |>
 
 type 'a task = 'a Task.task

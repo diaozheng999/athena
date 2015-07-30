@@ -1,12 +1,11 @@
 structure Stream : STREAM =
 struct
 open AthenaCore
-open AthenaCore.Task
+open AthenaAsync.Task
 infix 3 await
 infix 3 <| <||
 infixr 3 |> ||>
 
-type 'a task = 'a AthenaCore.Task.task
 type 'a pair = 'a Seq.pair
 type 'a seq = 'a Seq.seq
 

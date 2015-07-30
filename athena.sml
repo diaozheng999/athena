@@ -4,7 +4,11 @@ struct
 open AthenaCore
 
 structure Core = AthenaCore
+structure Async = AthenaAsync
 structure Data = AthenaData
 structure Program = AthenaProgram
 
 end
+
+functor AthenaRBTFn (T:ORD_KEY) = RBTFn (T)
+functor AthenaBSTFn (T:ORD_KEY) = BSTFn (T)

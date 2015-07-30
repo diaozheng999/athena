@@ -1,0 +1,15 @@
+library (0.0.1)
+	signature ATHENA_ASYNC
+	structure AthenaAsync
+is	
+	$/basis.cm
+	$/smlnj-lib.cm
+	../core/core.cm
+	task.sig
+	task.sml
+	event.sig
+	event.sml
+	timer.sig
+	timer.sml
+	extern.sig
+	extern.sml

@@ -3,7 +3,8 @@ Library (0.0.1)
         signature ATHENA_CORE
         signature ATHENA_CORE_SERIALISABLE
         structure AthenaCore
-        structure UUID
+        functor RBTFn
+	functor BSTFn
 is
         $/basis.cm
         $/smlnj-lib.cm
@@ -32,11 +33,11 @@ is
         rbt.sml
         stack.sig
         stack.sml
-        thread.sig
-        thread.sml
         serialiser.sig
         serialiser.sml
         uuid.sig
         uuid.sml
+	heap.sig
+	heap.sml
         extern.sig
         extern.sml

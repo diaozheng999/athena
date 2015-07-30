@@ -1,10 +1,13 @@
 Library (0.0.1)
         signature ATHENA
         structure Athena
+	functor AthenaRBTFn
+	functor AthenaBSTFn
 is
         $/basis.cm
         $/smlnj-lib.cm
         core/core.cm
+	async/async.cm
         data/data.cm
         program/program.cm
         athena.sig

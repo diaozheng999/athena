@@ -13,10 +13,8 @@ fun isEmpty (0,_,_,_) = true
 		    
 
 fun swap (arr, i, j)=
-    (print ("swapping len="^Int.toString (Array.length arr)^
-	    " i="^Int.toString i^" j="^Int.toString j^"\n");
     let val (p, q) = (Array.sub (arr, i), Array.sub(arr,j))
-    in (Array.update (arr, i, q); Array.update (arr, j, p)) end)
+    in (Array.update (arr, i, q); Array.update (arr, j, p)) end
 
 
 
@@ -50,6 +48,11 @@ fun push (size, cap, arr, timer) (priority, value) =
 	  in heapify size end;
 	  (size+1, !recap, arr, timer))
     end
+
+fun peek (size,_,arr,_) =
+    case size of
+	0 => NONE
+      | _ => Option.map (fn(_,_,v)=>v) (Array.sub(!arr,0))
 	
 fun pop (heap as (size, cap, arr, timer) ) =
     case size of

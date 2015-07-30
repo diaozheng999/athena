@@ -1,0 +1,16 @@
+local
+	$(SML_LIB)/basis/basis.mlb
+	$(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+	../core/core.mlb
+	task.sig
+	task.sml
+	event.sig
+	event.sml
+	timer.sig
+	timer.sml
+	extern.sig
+	extern.sml
+in
+	signature ATHENA_ASYNC
+	structure AthenaAsync
+end

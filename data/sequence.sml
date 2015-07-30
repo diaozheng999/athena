@@ -1,9 +1,8 @@
-structure Seq :> SEQUENCE
-  where type 'a task = 'a AthenaCore.Task.task =
+structure Seq :> SEQUENCE =
 struct
 
 open AthenaCore
-open AthenaCore.Task
+open AthenaAsync.Task
 infix 3 await
 infix 3 <|
 infixr 3 |>
