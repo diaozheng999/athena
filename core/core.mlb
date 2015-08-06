@@ -31,6 +31,9 @@ local
         uuid.sml
 	heap.sig
 	heap.sml
+	exn.sig
+	exn_common.sml
+	exn_mlton.sml
         extern.sig
         extern.sml
 in

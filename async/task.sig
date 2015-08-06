@@ -4,7 +4,7 @@ sig
     (* REQUIRES: each evaluation step of task is total. Task itself need not be total. *)
     type 'a task
 
-    datatype 'a state = Result of 'a | Run of 'a task
+    type 'a state
 
     (* delays the evaluation and wraps it in a task. *)
     val delay : (unit -> 'a state) -> 'a task
@@ -38,16 +38,28 @@ sig
 
        REQUIRES: task1 and task2 are both thread safe*)
     val join : 'a task * 'b task -> ('a * 'b) task
+    
+    val zip : ('a -> 'b task) * ('c -> 'd task) -> 'a * 'c
+	      -> ('b * 'd) task
 
-    (* joints the execution of many tasks of the same return type together.
+    (* joins the execution of many tasks of the same return type together.
        ensure that all elements of the vector are thread-safe as they will
        all be executed concurrently
 
        REQUIRES: all elements in tasklist are thread safe*)
     val concurrent : 'a task vector -> 'a  -> 'a vector task
 
+    (* a shorthand to run multiple tasks in a list concurrently. 
+       NOTE: c l ~= ignore (concurrent (Vector.toList l) ()) *)
+    val c : unit task list -> unit task
+
     (* ignores the output of the task. Task will evaluate to Result () if total. *)
     val ignore : 'a task -> unit task
+
+    (* similar to ignore. usage: 
+       (task1 |> task2 |> task3 |> done) (param)
+    *)
+    val done : 'a -> unit task
 
     (* check if the task is complete. This function is total given task invariant. *)
     val isComplete : 'a task -> bool

@@ -11,7 +11,8 @@ infixr 3 |> ||>
 
 structure T = Task
 
-exception Event
+exception EventNotFound
+exception ListenerNotFound
 
 exception Undefined
 
@@ -19,13 +20,18 @@ type listener = serialised -> unit task
 type event = (int ref * (int, listener) HashTable.hash_table ref)
 type registry = (string, event) HashTable.hash_table
 
+val ctx = "Athena.Async.Event"
+
 fun undefined _ = raise Undefined
 
 fun mkRegistry () = HashTable.mkTable
-                        (HashString.hashString, (op=)) (313, Event)
+                        (HashString.hashString, (op=)) 
+			(313, EventNotFound)
 
-fun mkEvent () : event = (ref 0, ref (HashTable.mkTable (Word.fromInt, (op=))
-                                                        (17, Event)))
+fun mkEvent () : event = (ref 0, 
+			  ref (HashTable.mkTable 
+				   (Word.fromInt, (op=))
+                                   (17, ListenerNotFound)))
 
 
 
@@ -38,19 +44,34 @@ val raiseEvent = ref (fn (_:string, _:serialised) => yield ())
 fun startEventSystem (reg:registry) =
 
     let fun addListener' (event:string) listener =
-	    case HashTable.find reg event of
-                NONE => (HashTable.insert reg (event, mkEvent ());
-                         addListener' event listener)
-              | (SOME (n, ref ldic)) => yield (n:= !n + 1;
-                                               HashTable.insert ldic
-                                                                (!n, listener);
-                                               !n)
+	    (debug (ctx^".addListener", "adding listener to event \""
+					^ event ^"\"");
+	      case HashTable.find reg event of
+                  NONE => (HashTable.insert reg (event, mkEvent ());
+                           addListener' event listener)
+		| (SOME (n, ref ldic)) => yield (n:= !n + 1;
+						 HashTable.insert ldic
+                                                                  (!n, listener);
+						 debug (ctx^".addListener",
+							"listener "^
+							Int.toString (!n)^" added to event \""
+							^ event ^"\"");
+						 !n))
 
-        fun removeListener' event lid =			   
+        fun removeListener' event lid =
+	    (debug (ctx^".removeListener",
+		    "removing listener "^Int.toString lid^" from event \""
+		    ^ event ^"\"");
             case HashTable.find reg event of
                 NONE => yield ()
               | SOME (n, ref listeners) =>
-                yield (General.ignore (HashTable.remove listeners lid))
+                yield (General.ignore (HashTable.remove listeners lid);
+		       debug (ctx^".removeListener",
+			      "removed.")))
+	    handle _ => (debug(ctx^".removeListener",
+			       "listener "^Int.toString lid^" from event \""
+			       ^ event ^"\" not found.");
+			 raise Fail "Listener not found.")
 		
 
         fun raiseEvent' (event, arg) =
@@ -59,8 +80,13 @@ fun startEventSystem (reg:registry) =
               | SOME (_, ref listeners) =>
                 let val tasklist = Vector.fromList
                                        (HashTable.listItems listeners)
-                in ignore (concurrent
-                               (Vector.map (fn t => t arg) tasklist) ()) end
+                in (debug(ctx^".raiseEvent",
+			  "raising event \""^event^"\" to "
+			  ^Int.toString (Vector.length tasklist)^
+			  " listener(s) with data stream "
+			  ^Serialiser.toString "" arg);
+		    ignore (concurrent
+				(Vector.map (fn t => t arg) tasklist) ())) end
 
         val () = (addListener := addListener';
                   removeListener := removeListener';

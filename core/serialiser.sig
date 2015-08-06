@@ -266,4 +266,7 @@ sig
     (* interprets an unheadered serialised object with a proper header *)
     val interpret : serialised * type_repr -> serialised
 
+    val ensure : serialised -> int * type_repr 
+		 -> (unit -> 'a) -> 'a
+
 end

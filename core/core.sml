@@ -31,6 +31,12 @@ fun fst (f, b) a = f (a, b)
 
 fun snd (f, a) b = f (a, b)
 
+val debug = case Env.debug of
+		Env.RELEASE => (fn (_,_) => ())
+	      | _ => (fn (loc, msg) =>
+			 print (loc^": "^msg^"\n"))
+
+
 val u = Option.valOf o Utf8String.fromString
 val % = Option.valOf o Utf8Char.fromString
 val ^^ = Utf8String.^

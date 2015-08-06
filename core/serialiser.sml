@@ -3,9 +3,10 @@ struct
 
 structure V = Word8Vector
 structure VS = Word8VectorSlice
-structure W32 = Word32
-structure W8 = Word8
+structure W32 = AthenaWord32
+structure W8 = AthenaWord8
 structure W = Word
+structure C = WordCvt
 
 open Core
 
@@ -30,7 +31,7 @@ datatype type_id = GENERIC
                      | EXT
 
 
-datatype endian = LITTLE | BIG
+open Endian
 
 exception Type
 
@@ -54,13 +55,16 @@ fun mask w = W32.andb(w, 0wxFF)
 fun toInt32 w = case W32.andb(w, 0wx80000000) of
                     0wx0 => W32.toInt w
                   | _ => ~(W32.toInt (W32.notb w))-1
+
+local structure V = Vector
+      structure VS = VectorSlice
+in fun psingleton s = VS.full (V.tabulate (1, fn _ => s))
+end
+
 (* toBytes : endian -> W32.word -> VS.slice *)
-fun toBytes en w =
-    let val conv = W8.fromInt o W32.toInt o mask
-    in tabulate (4, fn i => case en of
-                                LITTLE => conv (W32.>>(w, W.fromInt (i*8)))
-                              | BIG => conv (W32.>>(w, W.fromInt ((3-i)*8))))
-    end
+fun toBytes LITTLE w = C.mono (C.w32to8l (psingleton w))
+  | toBytes BIG w = C.mono (C.w32to8b (psingleton w))
+
 (* fromBytes : endian -> VS.slice -> W32.word *)
 fun fromBytes en w =
     let val conv = mask o W32.fromInt o W8.toInt
@@ -69,6 +73,11 @@ fun fromBytes en w =
            LITTLE => VS.foldr shift 0wx0 w
          | BIG => VS.foldl shift 0wx0 w
     end
+local structure VS = VectorSlice
+in 
+fun fromBytes LITTLE w = VS.sub (C.w8to32l (C.poly w), 0)
+  | fromBytes BIG w = VS.sub (C.w8to32b (C.poly w), 0)
+end
 
 fun bytesToInt32 en = toInt32 o (fromBytes en)
 
@@ -112,22 +121,8 @@ fun expFromBits bits =
                                   | (false,x) => W32.<<(x,0w1)) 0w0 bits
     in toInt32 repr - k end
 
-fun toBitVector s =
-    Vector.tabulate (VS.length s*8,
-                     (fn i =>
-                         let val (n,b) = (i div 8, i mod 8)
-                         in case W8.andb(VS.sub(s,n), V.sub(bits,b)) of
-                                0wx0 => false
-                              | _ => true end))
-
-
-val bvsToWord = VectorSlice.foldl (fn (false, acc) => W8.<<(acc, 0w1)
-                                  | (true, acc) => W8.orb(W8.<<(acc,0w1),
-                                                            0w1)) 0w0
-
-fun fromBitVector bv =
-    tabulate (Vector.length bv div 8,
-              (fn i => bvsToWord (VectorSlice.slice (bv, i*8, SOME 8))))
+val toBitVector = VectorSlice.vector o C.w8tobb o C.poly
+val fromBitVector = C.mono o C.bto8b o VectorSlice.full
 
 end
 
@@ -524,7 +519,36 @@ sig
     type t
 
     val serialise : t -> Serialiser.serialised
-    val unserialise : Serialiser.serialised -> t
-    val size : Serialiser.serialised -> int
+    val unserialise : Serialiser.serialised -> t * Serialiser.serialised
+end
 
+signature ASYNC_SERIALISABLE =
+sig
+    type 'a task
+    type t
+    val serialise : t -> Serialiser.serialised task
+    val unserialise : Serialiser.serialised 
+		      -> (t * Serialiser.serialised) task
+end
+
+signature POLY_SERIALISABLE =
+sig
+    type 'a t
+    val serialise : ('a -> Serialiser.serialised)
+		    -> 'a t -> Serialiser.serialised
+    val unserialise : (Serialiser.serialised -> 'a)
+		      -> Serialiser.serialised -> 
+		      'a t * Serialiser.serialised
+end
+
+signature ASYNC_POLY_SERIALISABLE =
+sig
+    type 'a task
+    type 'a t
+    val serialise : ('a -> Serialiser.serialised task)
+		    -> 'a t -> Serialiser.serialised task
+    val unserialise : (Serialiser.serialised 
+		       -> ('a * Serialiser.serialised) task)
+		      -> Serialiser.serialised 
+		      -> ('a t * Serialiser.serialised) task
 end

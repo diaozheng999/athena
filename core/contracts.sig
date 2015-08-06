@@ -23,5 +23,4 @@ val fromFn : ('a -> 'b) -> ('a, 'b) function
 
 val toFn : ('a, 'b) function -> 'a -> 'b
 
-
 end

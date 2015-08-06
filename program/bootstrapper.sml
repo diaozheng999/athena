@@ -16,8 +16,11 @@ fun bootstrapper f () = ignore (!Event.addListener "__start"
                                                        Serialiser.packUnit ()))
 
 fun exec f =
-    let
-      val reg = Event.mkRegistry ()
-    in run ((Event.startEventSystem |> bootstrapper f) reg) end
+    (
+      let
+	  val reg = Event.mkRegistry ()
+      in run ((Event.startEventSystem |> bootstrapper f) reg) end
+    ) handle 
+    e => Exn.dump e
 
 end

@@ -1,5 +1,5 @@
-open Word8VectorSlice
-open AthenaCore.Task
+type slice = Word8VectorSlice.slice
+type 'a task = 'a AthenaAsync.Task.task
 
 signature HASH =
 sig

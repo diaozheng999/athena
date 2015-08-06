@@ -92,4 +92,11 @@ fun <|| (t1, t2) = t2 await (fn () => t1)
 fun select {cond=cond, true=ifT, false = ifF} = cond await (fn true => ifT
                                                              | false => ifF)
 
+fun done _ = yield ()
+
+fun c l = ignore (concurrent (Vector.fromList l) ())
+
+fun zip (t1,t2) (p1,p2) =
+    join (t1 p1, t2 p2)
+
 end

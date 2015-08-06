@@ -1,5 +1,7 @@
 Library (0.0.1)
 	signature ATHENA_DATA
+	signature ATHENA_SEQUENCE
+	signature ATHENA_STREAM
 	structure AthenaData
 is
 	$/basis.cm

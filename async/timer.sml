@@ -3,39 +3,36 @@ struct
 
 open AthenaCore.TopLevel
 open Task
-open Event
 open AthenaCore
 open AthenaCore.Heap
-open AthenaCore.Serialiser
+
+structure HT = HashTable
 
 infix <| <|| await
 infixr |> ||>
 
+exception Trigger
 
-type timer =
-     {t : int ref,
-      id : string,
-      ct : int vector ref,
-      vt : (int * listener) heap ref,
-      tick : int option ref,
-      clr : (string * int vector) option ref}
+type timer = 
+     { t : int ref,
+       ct : (int -> unit task) vector ref,
+       vt : (int * (int -> unit task)) heap ref,
+       r : bool ref}
 
-val getInt = async (car o unpackInt)
+fun ct (t:timer) = !(#ct t)
+fun vt (t:timer) = !(#vt t)
+fun t (t':timer) = !(#t t')
 
-fun addContinuousTrigger (t:timer) trig =
-    ((!addListener) ("__ct-"^ #id t) 
-     |> async (fn i =>
-		  (#ct t) := 
-		  Vector.concat [Vector.fromList [i],
-				 !(#ct t)]))
-	(getInt |> trig)
-		   
+fun addContinuousTrigger timer trigger =
+    yield 
+	(#ct timer := Vector.concat [Vector.fromList [trigger],
+				     ct timer])
 
-fun addValueTrigger (t:timer) (v,trig) =
-    yield ((#vt t) := push (!(#vt t)) (v,(v,getInt |> trig)))
+fun addValueTrigger timer (v,trig) =
+    yield
+	(#vt timer := push (vt timer) (v,(v,trig)))
 
 fun genId () = UUID.toString UUID.UUID (UUID.generate ())
-	
 
 local
     open Timer
@@ -51,97 +48,65 @@ fun delay mils =
     in (async startRealTimer |> sleep) () end
 end
 
-	    
+fun stop (timer:timer) = yield (#r timer := false)
+    
+
 fun start tickFn =
-    let 
-	(* initialise timer object *)
+    let
 	val timer = let
-	    val ect : int vector ref 
+	    val ect : (int -> unit task) vector ref
 		= ref (Vector.fromList [])
-	    val evt : (int * listener) heap ref
+	    val evt : (int * (int -> unit task)) heap ref
 		= ref (Heap.empty ())
-	in {t=ref 0, 
-	    ct=ect, 
-	    vt=evt,
-	    id=genId (),
-	    tick=ref NONE,
-	    clr=ref NONE
-	   } end
+	in {t=ref 0,ct=ect,vt=evt, r=ref true} end
 
-	fun updateTimer i = 
-	    if (i=(!(#t timer))) then raise Fail "invalid update"
-	    else
-		yield ((#t timer) := i)
+	fun updateTimer i =
+	    yield (#t timer := i)
 
-	fun peel i = 
-	    case peek (!(#vt timer)) of
-		NONE => NONE
-	      | SOME (v,t) =>
+	fun peel i acc =
+	    case peek (vt timer) of
+		NONE => acc
+	      | SOME(v,t) =>
 		case v<=i of
-		    false => NONE
-		  | true => (#vt timer := cdr (pop (!(#vt timer)));
-			     SOME (v,t))
+		    false => acc
+		  | true => (#vt timer := cdr (pop (vt timer));
+			     peel i (t i::acc))
 
+	fun tick () =
+	    (tickFn 
+		 |> updateTimer
+		 |> (fn () => 
+			concurrent
+			    (Vector.concat
+				 [Vector.map
+				      (fn tl => tl (t timer))
+				      (ct timer),
+				  Vector.fromList
+				      (peel (t timer) []),
+				  propagate ()]) ())
+		 |> done
+	    ) (t timer)
+	and propagate () =
+	    case !(#r timer) of
+		true => Vector.fromList [tick ()]
+	      | false => Vector.fromList []
 
-	fun clrTimeBase () =
-	    case !(#clr timer) of
-		NONE => yield ()
-	      | SOME (s,l) =>
-		concurrent 
-		    (Vector.map (!removeListener s) l) ()
-		    await
-		    (fn _ => yield (#clr timer := NONE))
+    in (timer, tick ()) end
+	    
+fun interval ms i = delay ms await (fn () => yield (i+1))
 
-	fun timeBasedComparison i =
-	    case (peel i, !(#clr timer)) of
-		(NONE,NONE) => yield ()
-	      | (NONE,SOME(s,l)) => 
-		!raiseEvent (s, packInt i)
-	      | (SOME(v,t), clr) =>
-		(case clr of
-		     SOME(s,l) => yield ()
-		   | NONE => 
-		     yield (#clr timer := SOME ("__vt-"^genId (),
-						Vector.fromList [])))
-		    ||>
-		    let val (s,l) = Option.valOf (!(#clr timer))
-		    in (!addListener s t) 
-			   await
-			   (fn lid => 
-			       yield (
-				   #clr timer :=
-				   SOME (s,
-					 Vector.concat 
-					     [l,
-					      Vector.fromList [lid]]))
-			   ) end
-		    ||> timeBasedComparison i
-	
-	
+fun stopAt (timer,ticks) =
+    addValueTrigger timer (ticks, fn _ => stop timer)
 
-	(* create the tick function *)
-	fun tick _ =
-	    clrTimeBase () 
-		||> ((tickFn |> updateTimer) (!(#t timer))
-		await (fn () => ignore
-		(concurrent
-		     (Vector.fromList
-			  [(!raiseEvent
-				("timer-"^(#id timer),
-				 packUnit ())),
-			   (!raiseEvent 
-				("__ct-"^(#id timer),
-				 packInt (!(#t timer)))),
-			   (timeBasedComparison (!(#t timer)))])
-		     ())))
-
+fun setInterval (ms,f) =
+    let val (timer, task) = start (interval ms)
     in (timer, 
-	(!addListener ("timer-"^(#id timer)) tick
-		      await
-		      (fn id => yield (#tick timer := SOME id)
-				      ||> !raiseEvent
-				      ("timer-"^(#id timer),
-				       packUnit ())))
-       ) end
+	addContinuousTrigger timer (fn _ => f)
+	||> task) end
 
+
+fun setTimeout (ms,f) =
+    let val (timer,task) = start (interval ms)
+    in (timer,
+	addValueTrigger timer (1, (fn _ => ignore (join (f, stop timer))))) end
 end

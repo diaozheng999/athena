@@ -11,5 +11,7 @@ local
 	extern.sml
 in
 	signature ATHENA_DATA
+	signature ATHENA_SEQUENCE
+	signature ATHENA_STREAM
 	structure AthenaData
 end

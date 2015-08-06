@@ -19,4 +19,12 @@ sig
 
     val delay : int -> unit task
 
+    val stop : timer -> unit task
+
+    val stopAt : timer * int -> unit task
+
+    val setInterval : int * unit task -> timer * unit task
+
+    val setTimeout : int * unit task -> timer * unit task
+
 end

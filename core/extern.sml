@@ -13,7 +13,10 @@ structure Utf8String = Utf8String
 structure Contracts = Contracts
 structure Heap = Heap
 structure UUID = UUID
+structure Exn = Exn
+structure WordCvt = WordCvt
 
+structure Bit = Bit
 structure Word = AthenaWord
 structure Word8 = AthenaWord8
 structure Word32 = AthenaWord32

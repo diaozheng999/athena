@@ -116,7 +116,7 @@ fun ~ w = notb w + (0w1,0w0)
 fun min (w1,w2) = if w1<w2 then w1 else w2
 fun max (w1,w2) = if w1>w2 then w1 else w2
 
-fun fmt rad w = raise Fail "NYI"
+fun fmt rad w = IntInf.fmt rad (toLargeInt w)
 
 fun pad s p 0 = s
   | pad s p n = pad (s^p) p (Int.-(n,1))

@@ -2,7 +2,12 @@ Library (0.0.1)
         signature ATHENA_CORE_TOPLEVEL
         signature ATHENA_CORE
         signature ATHENA_CORE_SERIALISABLE
+	signature ATHENA_CORE_POLY_SERIALISABLE
+	signature ATHENA_CORE_ASYNC_SERIALISABLE
+	signature ATHENA_CORE_ASYNC_POLY_SERIALISABLE
         structure AthenaCore
+	functor WordCvtFn
+	structure WordCvt
         functor RBTFn
 	functor BSTFn
 is
@@ -21,6 +26,10 @@ is
 	word.sig
 	word64.sml
 	word_smlnj.sml
+	bit.sml
+	wordcvt_func.sml
+	wordcvt.sig
+	wordcvt.sml
         core.sig
         core.sml
         enum_key.sig
@@ -39,5 +48,8 @@ is
         uuid.sml
 	heap.sig
 	heap.sml
+	exn.sig
+	exn_common.sml
+	exn_smlnj.sml
         extern.sig
         extern.sml

@@ -58,4 +58,6 @@ signature CORE = sig
     val u_str : Utf8Char.char -> Utf8String.string
     val u_substring : Utf8String.string * int * int -> Utf8String.string
 
+    val debug : string * string -> unit
+
 end

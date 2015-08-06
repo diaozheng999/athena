@@ -1,15 +1,15 @@
-
-type 'a task = 'a AthenaAsync.Task.task
 type 'a seq = 'a Seq.seq
 
 signature STREAM =
 sig
+    include ATHENA_CORE_ASYNC_POLY_SERIALISABLE
 
     type 'a stream
 
     val append : 'a stream * 'a stream -> 'a stream task
 
     val read : 'a stream -> ('a * 'a stream) option task
+    val readN : int -> 'a stream -> ('a seq * 'a stream) task
 
     val cons : 'a -> 'a stream -> 'a stream task
 
@@ -27,4 +27,6 @@ sig
     val singleton : 'a -> 'a stream task
 
     val map : ('a -> 'b task) -> 'a stream -> 'b stream task
+
+    
 end

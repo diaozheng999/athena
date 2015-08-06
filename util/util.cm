@@ -1,16 +1,15 @@
 
 Library
 	signature HASH
-	signature CRYPT
 	structure AthenaCore
 	structure AthenaData
-	structure MD5
-
+	structure SHA256
 is
       $/basis.cm
       $/smlnj-lib.cm
       $c/c.cm
       ../core/core.cm
+      ../async/async.cm
       ../data/data.cm
       hash.sig
-      md5.sml    
+      sha256.sml    
