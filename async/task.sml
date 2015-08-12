@@ -81,6 +81,8 @@ fun ignore task = task await (fn _ => yield ())
 
 fun async f x = Do (fn () => Result (f x))
 
+fun sync f x = run (f x)
+
 fun <| (t1, t2) param = (t2 param) await (fn res => t1 res)
 
 fun |> (t1, t2) param = (t1 param) await (fn res => t2 res)

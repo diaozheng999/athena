@@ -508,7 +508,15 @@ fun fromByteVector v = tabulate (Vector.length v, fn i => Vector.sub (v,i))
 fun bitVectorToString b =
     Vector.foldr (op ^) "" (Vector.map (fn true => "1" | false => "0") b)
 
+fun toBytes s = s
 
+fun fromBytes s = s
+
+fun extern s = interpret (s, 0wxfe)
+
+fun unpackExtern s =
+    ensure s (1, 0wxfe)
+	   (fn () => VS.subslice(s,1,NONE))
 
 end
 

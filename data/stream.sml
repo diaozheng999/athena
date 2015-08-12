@@ -57,6 +57,10 @@ fun toSeq s = (toList |> Seq.fromList) s
 fun map f = read |> (fn NONE => yield EOS
                       | SOME(e,r) => f e await (fn e' => (e':::map f) r))
 
+fun reduce f i =
+    read |> (fn NONE => yield i
+	    | SOME(x,xs) => reduce f i xs await snd (f, x))
+
 type 'a t = 'a stream
 
 local

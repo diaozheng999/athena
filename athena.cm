@@ -3,12 +3,14 @@ Library (0.0.1)
         structure Athena
 	functor AthenaRBTFn
 	functor AthenaBSTFn
+	functor AthenaUtilHashFn
 is
         $/basis.cm
         $/smlnj-lib.cm
         core/core.cm
 	async/async.cm
         data/data.cm
+	util/util.cm
         program/program.cm
         athena.sig
         athena.sml

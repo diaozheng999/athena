@@ -269,4 +269,14 @@ sig
     val ensure : serialised -> int * type_repr 
 		 -> (unit -> 'a) -> 'a
 
+    (* changes the internal representation to a byte sequence *)
+    val toBytes : serialised -> Word8VectorSlice.slice
+
+    (* changes a byte sequence to the internal representation *)
+    val fromBytes : Word8VectorSlice.slice -> serialised
+
+    (* creates an valid internal repr from a bytes sequence.
+       i.e. appending 0xfe to the front *)
+    val extern : Word8VectorSlice.slice -> serialised
+    val unpackExtern : serialised -> Word8VectorSlice.slice
 end

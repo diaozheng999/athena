@@ -1,14 +1,21 @@
-structure SHA256  =
+structure SHA256 : HASH_ALGO =
 struct
 
 open AthenaCore
 open AthenaCore.WordCvt
+
+
 structure VS = Word8VectorSlice
 
 type digest = Word8Vector.vector
+type message = VS.slice
+
+val outputLength = 32
+val algo : AthenaCore.Word8.word = 0wx2
 
 fun psingleton s = 
     VectorSlice.full (Vector.tabulate (1, fn _ => s))
+
 val tabulate = VS.full o Word8Vector.tabulate
 
 local
@@ -71,54 +78,59 @@ fun chunkify m =
     Vector.tabulate (VS.length m div 64,
 		     fn i => w8to32b (poly (VS.subslice (m, i*64, SOME 64))))
 
-val H0:Word32.word vector = Vector.fromList
-	     [0wx6a09e667,0wxbb67ae85,0wx3c6ef372,0wxa54ff53a,
-	      0wx510e527f,0wx9b05688c,0wx1f83d9ab,0wx5be0cd19]
+val H0:Word32.word vector = 
+    Vector.fromList
+	[0wx6a09e667,0wxbb67ae85,0wx3c6ef372,0wxa54ff53a,
+	 0wx510e527f,0wx9b05688c,0wx1f83d9ab,0wx5be0cd19]
 
 val preprocess = chunkify o pad
 
 local
     structure A = Array
 in
+
+fun sha256 (M, H) =
+    let val W = A.tabulate (64, fn _ => 0wxffffffff)
+	val () = 
+	    A.modifyi
+		(fn (t,w) =>
+		    case Int.compare (t,15) of
+			GREATER =>
+			sigma_1(A.sub(W,t-2)) +
+			A.sub(W,t-7) +
+			sigma_0(A.sub(W,t-15)) +
+			A.sub(W,t-16)
+		      | _ => VectorSlice.sub(M,t)) W
+	fun hash' V 64 = V
+	  | hash' (a,b,c,d,e,f,g,h) t =
+	    let val T1 = h+Sigma_1(e)+Ch(e,f,g)+Vector.sub(K,t)
+			 +A.sub(W,t)
+		val T2 = Sigma_0(a)+Maj(a,b,c)
+	    in hash' (T1+T2,a,b,c,d+T1,e,f,g) (t+1) end
+	val (a,b,c,d,e,f,g,h)
+	    = hash' (Vector.sub (H, 0),
+		     Vector.sub (H, 1),
+		     Vector.sub (H, 2),
+		     Vector.sub (H, 3),
+		     Vector.sub (H, 4),
+		     Vector.sub (H, 5),
+		     Vector.sub (H, 6),
+		     Vector.sub (H, 7)) 0
+    in Vector.tabulate (8, 
+			(fn 0 => a + Vector.sub (H, 0)
+			| 1 => b + Vector.sub (H, 1)
+			| 2 => c + Vector.sub (H, 2)
+			| 3 => d + Vector.sub (H, 3)
+			| 4 => e + Vector.sub (H, 4)
+			| 5 => f + Vector.sub (H, 5)
+			| 6 => g + Vector.sub (H, 6)
+			| _ => h + Vector.sub (H, 7)))
+    end
+	
+
 fun hash m =
-    Vector.foldl 
-	(fn (M, H) =>
-	    let val W = A.tabulate (64, fn _ => 0wxffffffff)
-		val () = 
-		    A.modifyi
-			(fn (t,w) =>
-			    case Int.compare (t,15) of
-				GREATER =>
-				sigma_1(A.sub(W,t-2)) +
-				A.sub(W,t-7) +
-				sigma_0(A.sub(W,t-15)) +
-				A.sub(W,t-16)
-			      | _ => VectorSlice.sub(M,t)) W
-		fun hash' V 64 = V
-		  | hash' (a,b,c,d,e,f,g,h) t =
-		    let val T1 = h+Sigma_1(e)+Ch(e,f,g)+Vector.sub(K,t)
-				 +A.sub(W,t)
-			val T2 = Sigma_0(a)+Maj(a,b,c)
-		    in hash' (T1+T2,a,b,c,d+T1,e,f,g) (t+1) end
-		val (a,b,c,d,e,f,g,h)
-		    = hash' (Vector.sub (H, 0),
-			     Vector.sub (H, 1),
-			     Vector.sub (H, 2),
-			     Vector.sub (H, 3),
-			     Vector.sub (H, 4),
-			     Vector.sub (H, 5),
-			     Vector.sub (H, 6),
-			     Vector.sub (H, 7)) 0
-	    in Vector.tabulate (8, 
-				(fn 0 => a + Vector.sub (H, 0)
-				| 1 => b + Vector.sub (H, 1)
-				| 2 => c + Vector.sub (H, 2)
-				| 3 => d + Vector.sub (H, 3)
-				| 4 => e + Vector.sub (H, 4)
-				| 5 => f + Vector.sub (H, 5)
-				| 6 => g + Vector.sub (H, 6)
-				| _ => h + Vector.sub (H, 7)))
-	    end) H0 (preprocess m)
+    (VS.vector o mono o w32to8b o VectorSlice.full)
+	(Vector.foldl sha256 H0 (preprocess m))
 	    
 end
 

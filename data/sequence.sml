@@ -4,8 +4,8 @@ struct
 open AthenaCore
 open AthenaAsync.Task
 infix 3 await
-infix 3 <|
-infixr 3 |>
+infix 3 <| <||
+infixr 3 |> ||>
 
 datatype 'a pair = Pair of 'a * 'a | Singleton of 'a
 
@@ -129,5 +129,21 @@ fun fromList l = yield (Vector.fromList l)
 fun fromVector v = yield v
 
 fun fromArray a = yield (Array.vector a)
+
+fun toVector v = yield v
+
+fun toArray v =
+    let val arr = Array.tabulate (Vector.length v, 
+				  snd (Vector.sub, v))
+    in yield arr end
+
+fun toList' seq i =
+    case Vector.length seq-i of
+	0 => yield []
+      | _ => (AthenaAsync.Task.zip 
+		  (nth i, toList' seq) |> (async op::))
+		 (seq, i+1)
+
+fun toList seq = toList' seq 0
 
 end

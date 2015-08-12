@@ -28,5 +28,6 @@ sig
 
     val map : ('a -> 'b task) -> 'a stream -> 'b stream task
 
+    val reduce : ('a * 'b -> 'b task) -> 'b -> 'a stream -> 'b task
     
 end

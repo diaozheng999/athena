@@ -1,15 +1,8 @@
-
-Library
-	signature HASH
-	structure AthenaCore
-	structure AthenaData
-	structure SHA256
+Library 
+	signature ATHENA_UTIL
+	functor AthenaUtilHashFn
+	structure AthenaUtil
 is
-      $/basis.cm
-      $/smlnj-lib.cm
-      $c/c.cm
-      ../core/core.cm
-      ../async/async.cm
-      ../data/data.cm
-      hash.sig
-      sha256.sml    
+	hash/hash.cm
+	extern.sig
+	extern.sml

@@ -1,0 +1,18 @@
+
+Library
+	signature ATHENA_UTIL_HASH_ALGO
+	signature ATHENA_UTIL_HASH
+	structure AthenaUtilHash
+	functor AthenaUtilHashFn
+is
+      $/basis.cm
+      $/smlnj-lib.cm
+      $c/c.cm
+      ../../core/core.cm
+      ../../async/async.cm
+      ../../data/data.cm
+      hash.sig
+      sha256.sml   
+      hash.sml 
+      extern.sig
+      extern.sml

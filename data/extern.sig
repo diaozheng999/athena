@@ -3,6 +3,7 @@ sig
 
   structure Seq : SEQUENCE
   structure Stream : STREAM
+  structure Vector : ATHENA_VECTOR
 
 end
 

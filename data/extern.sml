@@ -3,5 +3,6 @@ struct
 
 structure Seq = Seq
 structure Stream = Stream
+structure Vector = AthenaVector
 
 end

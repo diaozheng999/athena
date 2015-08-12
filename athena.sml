@@ -6,6 +6,7 @@ open AthenaCore
 structure Core = AthenaCore
 structure Async = AthenaAsync
 structure Data = AthenaData
+structure Util = AthenaUtil
 structure Program = AthenaProgram
 
 end

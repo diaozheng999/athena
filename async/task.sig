@@ -64,7 +64,13 @@ sig
     (* check if the task is complete. This function is total given task invariant. *)
     val isComplete : 'a task -> bool
 
+    (* runs a synchronous operation asynchronously.
+       NOTE: the operation is run in one execution step. *)
     val async : ('a -> 'b) -> 'a -> 'b task
+
+    (* runs an asynchronous operation synchronously.
+       i.e. sync f x ~= run (f x) *)
+    val sync : ('a -> 'b task) -> 'a -> 'b
 
     val <| : ('a -> 'b task) * ('c -> 'a task) -> 'c -> 'b task
 
