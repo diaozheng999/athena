@@ -1,0 +1,9 @@
+local
+	hash/hash.mlb
+	extern.sig
+	extern.sml
+in
+	signature ATHENA_UTIL
+	functor AthenaUtilHashFn
+	structure AthenaUtil
+end

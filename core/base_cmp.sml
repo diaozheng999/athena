@@ -1,3 +1,16 @@
+(* base_cmp.sml
+   @Diao Zheng
+   
+   details the Cmp structure which is used in functors that require
+   comparisons. 
+
+   signature ENUM_KEY represents a enumerable key. I.e. suppose structure
+   T ascribes to ENUM_KEY, then given values a,b of type T.ord_key, there
+   exists a finite number of elements of type T.ord_key such that for all
+   elements e, T.compare (e, a) <> LESS andalso T.compare (e, b) = GREATER
+*)
+
+
 structure Cmp =
 struct
 

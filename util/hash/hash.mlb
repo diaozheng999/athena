@@ -1,0 +1,17 @@
+local
+	$(SML_LIB)/basis/basis.mlb
+	$(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb
+	../../core/core.mlb
+	../../async/async.mlb
+	../../data/data.mlb
+	hash.sig
+	sha256.sml
+	hash.sml
+	extern.sig
+	extern.sml
+in
+	signature ATHENA_UTIL_HASH_ALGO
+	signature ATHENA_UTIL_HASH
+	structure AthenaUtilHash
+	functor AthenaUtilHashFn
+end

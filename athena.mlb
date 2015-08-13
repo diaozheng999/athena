@@ -4,6 +4,7 @@ local
 	core/core.mlb
 	async/async.mlb
 	data/data.mlb
+	util/util.mlb
         program/program.mlb
 	athena.sig
 	athena.sml
@@ -12,4 +13,5 @@ in
 	structure Athena
 	functor AthenaRBTFn
 	functor AthenaBSTFn
+	functor AthenaUtilHashFn
 end

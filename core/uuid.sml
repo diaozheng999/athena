@@ -32,8 +32,20 @@ fun random bytes =
     in rv end
     handle Io => V.tabulate (bytes, (fn _ => Word8.fromInt (pseudo ())))
 
+fun affixVersion uuid =
+    let fun mask (a,b) = Word8.orb(Word8.andb(a,0wxF),b)
+	fun choice l =
+	    let val len = List.length l
+		val v = Word8.toInt (V.sub (random 1, 0))
+	    in Vector.sub (Vector.fromList l, v mod len) end
+	val v = [0wx80,0wx90,0wxa0,0wxb0]
+    in
+	V.tabulate (16, (fn 6 => mask (V.sub(uuid,6), 0wx40)
+			| 8 => mask (V.sub(uuid, 8), choice v)
+			| i => V.sub(uuid, i)))
+    end
 
-fun generate () = random 16
+fun generate () = affixVersion (random 16)
 
 
 fun compare (a,b) = String.compare (Byte.bytesToString a,
@@ -65,8 +77,9 @@ fun toString BINARY s = Serialiser.bitVectorToString
                                       (List.map (Serialiser.toString "")
                                                 [VS.slice (s,0,SOME 4),
                                                  VS.slice (s,4,SOME 2),
-                                                 VS.slice (s,6,SOME 2)])
-                           ^ Serialiser.toString "" (VS.slice(s,8,NONE)))
+                                                 VS.slice (s,6,SOME 2),
+						 VS.slice (s,8,SOME 2)])
+                           ^ Serialiser.toString "" (VS.slice(s,10,NONE)))
 
 
 fun fromString s =
@@ -76,6 +89,6 @@ fun fromString s =
           (size s div 2,
            (fn i => Option.valOf (W8.fromString (String.extract(s,i*2,SOME 2)))
           ))
-    end
+    end handle _ => raise Option
 
 end

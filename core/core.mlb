@@ -13,6 +13,10 @@ local
         utf8string.sml
 	word.sig
 	word_mlton.sml
+	bit.sml
+	wordcvt_func.sml
+	wordcvt.sig
+	wordcvt.sml
         core.sig
         core.sml
         enum_key.sig
@@ -40,6 +44,9 @@ in
         signature ATHENA_CORE_TOPLEVEL
         signature ATHENA_CORE
         signature ATHENA_CORE_SERIALISABLE
+	signature ATHENA_CORE_POLY_SERIALISABLE
+	signature ATHENA_CORE_ASYNC_SERIALISABLE
+	signature ATHENA_CORE_ASYNC_POLY_SERIALISABLE
         structure AthenaCore
 	functor RBTFn
 	functor BSTFn

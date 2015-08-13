@@ -7,6 +7,8 @@ local
 	sequence.sml
         stream.sig
         stream.sml
+	vector.sig
+	vector.sml
 	extern.sig
 	extern.sml
 in
